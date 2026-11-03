@@ -1,0 +1,6 @@
+{
+  "name": "Try Party: COSMOS",
+  "description": "Космическая игра-головоломка три-в-ряд Try Party: COSMOS с пиксельными героями League of Legends, коллекцией драгоценных камней, ежедневными наградами и 8-битной ретро-музыкой.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
