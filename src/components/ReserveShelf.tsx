@@ -1,6 +1,6 @@
 import React from 'react';
 import { TileItemData, Language } from '../types/game';
-import { FunnyCosmicChamps, CHAMPION_METAS } from './FunnyCosmicChamps';
+import { CAT_METAS, CosmicCats } from './CosmicCats';
 
 interface ReserveShelfProps {
   tiles: TileItemData[];
@@ -24,7 +24,7 @@ export const ReserveShelf: React.FC<ReserveShelfProps> = ({
       </div>
       <div className="flex items-center gap-2 p-2 rounded-2xl bg-slate-950/85 backdrop-blur-md border-2 border-indigo-500/40 shadow-2xl">
         {tiles.map((tile) => {
-          const meta = CHAMPION_METAS[tile.type];
+          const meta = CAT_METAS[tile.type];
           return (
             <div
               key={tile.id}
@@ -32,10 +32,13 @@ export const ReserveShelf: React.FC<ReserveShelfProps> = ({
               className="w-12 h-14 sm:w-14 sm:h-16 rounded-xl flex items-center justify-center bg-gradient-to-b from-[#1e1b4b] via-[#111827] to-[#030712] border-2 shadow-lg cursor-pointer hover:-translate-y-1 active:translate-y-0 active:scale-95 transition-all"
               style={{
                 borderColor: meta ? meta.accentColor : '#38bdf8',
+                backgroundImage: meta
+                  ? `linear-gradient(160deg, color-mix(in srgb, ${meta.accentColor} 48%, #111827), color-mix(in srgb, ${meta.accentColor} 22%, #030712))`
+                  : undefined,
                 boxShadow: meta ? `0 0 12px ${meta.glowColor}` : undefined,
               }}
             >
-              <FunnyCosmicChamps type={tile.type} isCovered={false} />
+              <CosmicCats type={tile.type} isCovered={false} />
             </div>
           );
         })}

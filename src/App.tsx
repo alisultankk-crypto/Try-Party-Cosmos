@@ -6,9 +6,8 @@
  * - Daily Login Reward (7-day calendar track with boosters & rare cosmic gems)
  * - Gemstones Inventory collection (gems drop 1x per level clear)
  * - Fullscreen responsive dynamic scaling layout (stretches to fill viewport cleanly)
- * - Cosmic Poro tells hilarious jokes every 3 successful triple matches
- * - Personalized celebration & praise for player "Машка" on victory
- * - Warm, heartfelt encouragement & comfort for "Машка" on defeat
+ * - Level rewards and persistent campaign progress
+ * - Encouraging feedback on defeat
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -40,9 +39,8 @@ import {
   CosmicGem,
 } from './types/game';
 import {
-  generateLevel1,
-  generateLevel2,
-  generateLevel3,
+  generateCampaignLevel,
+  MAX_CAMPAIGN_LEVEL,
   generateDailyChallenge,
   updateCoveredState,
   getTodayDateString,
@@ -53,10 +51,9 @@ import { TileItem } from './components/TileItem';
 import { SlotTray } from './components/SlotTray';
 import { BoosterBar } from './components/BoosterBar';
 import { ReserveShelf } from './components/ReserveShelf';
-import { CosmicPoro } from './components/CosmicPoro';
 import { CosmicBackground } from './components/CosmicBackground';
 import { MagicVfxOverlay, MagicBurstTrigger } from './components/MagicVfxOverlay';
-import { CHAMPION_METAS } from './components/FunnyCosmicChamps';
+import { CAT_METAS } from './components/CosmicCats';
 import { ScoreDisplay, ScoreFloater } from './components/ScoreDisplay';
 import { DailyTimer } from './components/DailyTimer';
 import { LeaderboardModal } from './components/LeaderboardModal';
@@ -146,7 +143,14 @@ export default function App() {
   };
 
   const [mode, setMode] = useState<GameMode>('campaign');
-  const [level, setLevel] = useState<number>(1);
+  const [level, setLevel] = useState<number>(() => {
+    try {
+      const saved = Number(localStorage.getItem('cosmic_campaign_level'));
+      if (Number.isInteger(saved) && saved >= 1 && saved <= MAX_CAMPAIGN_LEVEL) return saved;
+    } catch {}
+    return 1;
+  });
+  const victoryHandledRef = useRef(false);
 
   // Daily Challenge state
   const [todayDateStr, setTodayDateStr] = useState<string>(getTodayDateString());
@@ -171,6 +175,7 @@ export default function App() {
   const [shelf, setShelf] = useState<TileItemData[]>([]);
   const [matchingIds, setMatchingIds] = useState<string[]>([]);
   const [history, setHistory] = useState<{ tileId: string; fromBoardX: number; fromBoardY: number }[]>([]);
+  const matchResolutionRef = useRef<number | null>(null);
 
   const [boosters, setBoosters] = useState<BoostersState>({
     undo: 3,
@@ -231,16 +236,8 @@ export default function App() {
   });
   const [showDailyRewardModal, setShowDailyRewardModal] = useState<boolean>(false);
 
-  // 🐾 Poro Jokes on every 3 matches!
-  const matchCountRef = useRef<number>(0);
-  const [poroJoke, setPoroJoke] = useState<string | null>(null);
-  const poroJokeTimerRef = useRef<number | null>(null);
-
   // Responsive Board Scaling (Dynamic screen stretching)
   const [boardScale, setBoardScale] = useState<number>(1);
-
-  // Poro Mascot Animation State
-  const [isPoroCheering, setIsPoroCheering] = useState<boolean>(false);
 
   // Oracle Hint state
   const [hintedTileTypes, setHintedTileTypes] = useState<TileType[]>([]);
@@ -284,6 +281,14 @@ export default function App() {
     return () => window.removeEventListener('resize', updateScale);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (matchResolutionRef.current !== null) {
+        window.clearTimeout(matchResolutionRef.current);
+      }
+    };
+  }, []);
+
   // Check today's daily date string
   useEffect(() => {
     const today = getTodayDateString();
@@ -321,7 +326,18 @@ export default function App() {
     startCurrentGame();
   }, [mode, level]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('cosmic_campaign_level', String(level));
+    } catch {}
+  }, [level]);
+
   const startCurrentGame = () => {
+    if (matchResolutionRef.current !== null) {
+      window.clearTimeout(matchResolutionRef.current);
+      matchResolutionRef.current = null;
+    }
+    victoryHandledRef.current = false;
     setTimerRunning(false);
     setTimerSeconds(0);
     setDailyCompletionTime(null);
@@ -336,9 +352,7 @@ export default function App() {
       initialTiles = challenge.tiles;
       setDayLabel(challenge.dayLabel);
     } else {
-      if (level === 1) initialTiles = generateLevel1();
-      else if (level === 2) initialTiles = generateLevel2();
-      else initialTiles = generateLevel3();
+      initialTiles = generateCampaignLevel(level);
     }
 
     setTiles(initialTiles);
@@ -367,7 +381,14 @@ export default function App() {
 
   // Handle clicking a tile on the board
   const handleTileClick = (clickedTile: TileItemData) => {
-    if (clickedTile.isCovered || clickedTile.inSlot || clickedTile.inShelf || isGameOver || isVictory) {
+    if (
+      clickedTile.isCovered ||
+      clickedTile.inSlot ||
+      clickedTile.inShelf ||
+      isGameOver ||
+      isVictory ||
+      matchingIds.length > 0
+    ) {
       return;
     }
     if (slot.length >= 7) return;
@@ -381,7 +402,7 @@ export default function App() {
       setShowWelcomeBanner(false);
     }
 
-    puzzleSounds.playTileTap();
+    puzzleSounds.playCatMeow(clickedTile.type);
 
     setHistory((prev) => [
       ...prev,
@@ -410,9 +431,9 @@ export default function App() {
 
   // Handle clicking a tile from the Reserve Shelf
   const handleShelfTileClick = (shelfTile: TileItemData) => {
-    if (slot.length >= 7 || isGameOver || isVictory) return;
+    if (slot.length >= 7 || isGameOver || isVictory || matchingIds.length > 0) return;
 
-    puzzleSounds.playTileTap();
+    puzzleSounds.playCatMeow(shelfTile.type);
     const newShelf = shelf.filter((t) => t.id !== shelfTile.id);
     setShelf(newShelf);
 
@@ -430,7 +451,7 @@ export default function App() {
     checkSlotMatches(newSlot, tiles);
   };
 
-  // Check if 3 matching champions exist in the slot
+  // Check if 3 matching cats exist in the slot
   const checkSlotMatches = (currentSlot: TileItemData[], currentTiles: TileItemData[]) => {
     const counts: { [type: string]: TileItemData[] } = {};
     for (const item of currentSlot) {
@@ -447,26 +468,14 @@ export default function App() {
         const matchIds = matchingTiles.map((t) => t.id);
         setMatchingIds(matchIds);
 
-        const championMeta = CHAMPION_METAS[type];
-        const magicType: MagicEffectType = championMeta ? championMeta.magic : 'arcane';
+        const catMeta = CAT_METAS[type];
+        const magicType: MagicEffectType = catMeta.magic;
         const currentCombo = comboRef.current;
         const earnedPoints = 300 * currentCombo;
 
         puzzleSounds.playMagicEffect(magicType, currentCombo);
         comboRef.current++;
         setCombo(comboRef.current);
-
-        // Track match count for Poro jokes!
-        matchCountRef.current += 1;
-        if (matchCountRef.current > 0 && matchCountRef.current % 3 === 0) {
-          const jokes = t.poroJokes;
-          const joke = jokes[Math.floor(Math.random() * jokes.length)];
-          setPoroJoke(joke);
-          if (poroJokeTimerRef.current) clearTimeout(poroJokeTimerRef.current);
-          poroJokeTimerRef.current = window.setTimeout(() => {
-            setPoroJoke(null);
-          }, 5500);
-        }
 
         setScore((prev) => {
           const next = prev + earnedPoints;
@@ -506,14 +515,13 @@ export default function App() {
         setMagicBurst({
           id: `${Date.now()}_${Math.random()}`,
           type: magicType,
+          color: catMeta.accentColor,
           x: burstX,
           y: burstY,
         });
 
-        setIsPoroCheering(true);
-        setTimeout(() => setIsPoroCheering(false), 900);
-
-        setTimeout(() => {
+        matchResolutionRef.current = window.setTimeout(() => {
+          matchResolutionRef.current = null;
           setSlot((prev) => prev.filter((t) => !matchIds.includes(t.id)));
           setMatchingIds([]);
 
@@ -521,13 +529,7 @@ export default function App() {
             matchIds.includes(t.id) ? { ...t, isEliminated: true, inSlot: false } : t
           );
           setTiles(afterElimination);
-
-          const remainingOnBoard = afterElimination.filter(
-            (t) => !t.isEliminated && !t.inSlot && !t.inShelf
-          );
-          if (remainingOnBoard.length === 0 && shelf.length === 0) {
-            handleVictory();
-          }
+          if (afterElimination.every((t) => t.isEliminated)) handleVictory();
         }, 220);
         break;
       }
@@ -547,6 +549,8 @@ export default function App() {
   };
 
   const handleVictory = () => {
+    if (victoryHandledRef.current) return;
+    victoryHandledRef.current = true;
     setIsVictory(true);
     setTimerRunning(false);
     puzzleSounds.playVictory();
@@ -1050,11 +1054,7 @@ export default function App() {
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-2xl bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 text-white shadow-md">
               <span className="text-xs font-black uppercase tracking-wider text-cyan-300">
-                {level === 1
-                  ? `${t.level} 1 (${t.levelEasy})`
-                  : level === 2
-                  ? `🔥 ${t.level} 2 (${t.levelHard})`
-                  : `⭐ ${t.level} 3 (${t.levelMaster})`}
+                {t.level} {level} / {MAX_CAMPAIGN_LEVEL}
               </span>
             </div>
 
@@ -1067,23 +1067,6 @@ export default function App() {
 
       {/* 5. Center Main Playing Field (Stretches smoothly to fill the screen) */}
       <main className="relative z-10 flex-1 w-full max-w-4xl flex flex-col items-center justify-center my-auto min-h-[380px] px-2">
-        {/* Cosmic Astronaut Poro (tells jokes every 3 matches!) */}
-        <div className="absolute top-0 right-4 sm:right-10 z-30">
-          <CosmicPoro
-            isWorried={slot.length >= 6}
-            isCheering={isPoroCheering}
-            jokeText={poroJoke}
-            lang={lang}
-            onPoroClick={() => {
-              const jokes = t.poroJokes;
-              const joke = jokes[Math.floor(Math.random() * jokes.length)];
-              setPoroJoke(joke);
-              if (poroJokeTimerRef.current) clearTimeout(poroJokeTimerRef.current);
-              poroJokeTimerRef.current = window.setTimeout(() => setPoroJoke(null), 5000);
-            }}
-          />
-        </div>
-
         {/* The Scalable Responsive Board Container */}
         <div className="relative w-[340px] h-[360px] sm:w-[380px] sm:h-[390px] md:w-[420px] md:h-[430px] flex items-center justify-center transition-all duration-300">
           <div
@@ -1185,7 +1168,8 @@ export default function App() {
         dailyRank={dailyRank}
         droppedGem={droppedGem}
         lang={lang}
-        onNextLevel={() => setLevel((prev) => (prev < 3 ? prev + 1 : 1))}
+        isCampaignComplete={mode === 'campaign' && level === MAX_CAMPAIGN_LEVEL}
+        onNextLevel={() => setLevel((prev) => Math.min(MAX_CAMPAIGN_LEVEL, prev + 1))}
         onReplay={startCurrentGame}
         onViewLeaderboard={() => {
           setIsVictory(false);

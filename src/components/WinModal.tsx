@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Trophy, Sparkles, ArrowRight, RotateCcw, Timer, Share2, Check } from 'lucide-react';
 import { GameMode, Language, CosmicGem } from '../types/game';
 import { formatTimePrecise } from './DailyTimer';
@@ -15,6 +15,7 @@ interface WinModalProps {
   dailyRank?: number;
   droppedGem?: CosmicGem | null;
   lang?: Language;
+  isCampaignComplete?: boolean;
   onNextLevel: () => void;
   onReplay: () => void;
   onViewLeaderboard: () => void;
@@ -30,6 +31,7 @@ export const WinModal: React.FC<WinModalProps> = ({
   dailyRank,
   droppedGem = null,
   lang = 'ru',
+  isCampaignComplete = false,
   onNextLevel,
   onReplay,
   onViewLeaderboard,
@@ -37,12 +39,6 @@ export const WinModal: React.FC<WinModalProps> = ({
   const [copied, setCopied] = useState(false);
 
   const t = TRANSLATIONS[lang];
-
-  // Pick a heartwarming Mashka praise
-  const praiseText = useMemo(() => {
-    const list = t.mashkaPraises;
-    return list[Math.floor(Math.random() * list.length)];
-  }, [isOpen, lang, t.mashkaPraises]);
 
   if (!isOpen) return null;
 
@@ -72,12 +68,11 @@ export const WinModal: React.FC<WinModalProps> = ({
           {isDaily ? t.winDailyTitle : t.winTitle}
         </h3>
 
-        {/* 💖 Warm Personalized Praise for player Mashka */}
-        <div className="my-2.5 px-3 py-2 rounded-2xl bg-amber-200/90 border border-yellow-400 shadow-sm">
-          <p className="text-sm font-black text-amber-950 leading-tight">
-            {praiseText}
-          </p>
-        </div>
+        {isCampaignComplete && (
+          <div className="my-2.5 rounded-2xl border border-yellow-400 bg-amber-200/90 px-3 py-2 text-sm font-black text-amber-950 shadow-sm">
+            {t.campaignComplete}
+          </div>
+        )}
 
         {/* Dropped Cosmic Gemstone Reward */}
         {droppedGem && (
@@ -145,7 +140,7 @@ export const WinModal: React.FC<WinModalProps> = ({
             </button>
           )}
 
-          {!isDaily ? (
+          {!isDaily && !isCampaignComplete ? (
             <button
               onClick={onNextLevel}
               className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-95 text-white font-black text-sm rounded-xl shadow-lg transition"
@@ -153,7 +148,7 @@ export const WinModal: React.FC<WinModalProps> = ({
               <span>{t.nextLevel}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-          ) : (
+          ) : isDaily ? (
             <button
               onClick={onViewLeaderboard}
               className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-black text-sm rounded-xl shadow-md transition active:scale-95"
@@ -161,7 +156,7 @@ export const WinModal: React.FC<WinModalProps> = ({
               <Trophy className="w-4 h-4 fill-current" />
               <span>{t.speedrunLeaderboard}</span>
             </button>
-          )}
+          ) : null}
 
           <button
             onClick={onReplay}

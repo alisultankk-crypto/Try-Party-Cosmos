@@ -4,7 +4,24 @@
  * triangle bass, noise bursts, and classic retro gamer SFX.
  */
 
-import { MagicEffectType } from '../types/game';
+import { MagicEffectType, TileType } from '../types/game';
+
+const CAT_MEOWS: Record<TileType, { start: number; peak: number; end: number; duration: number; formant: number }> = {
+  yasuo: { start: 420, peak: 760, end: 510, duration: 0.24, formant: 1050 },
+  ahri: { start: 520, peak: 920, end: 620, duration: 0.3, formant: 1320 },
+  jinx: { start: 610, peak: 1080, end: 680, duration: 0.2, formant: 1480 },
+  teemo: { start: 330, peak: 590, end: 390, duration: 0.34, formant: 920 },
+  garen: { start: 370, peak: 680, end: 420, duration: 0.28, formant: 980 },
+  zed: { start: 290, peak: 510, end: 340, duration: 0.31, formant: 820 },
+  blitzcrank: { start: 480, peak: 820, end: 560, duration: 0.18, formant: 1180 },
+  vi: { start: 540, peak: 970, end: 590, duration: 0.26, formant: 1390 },
+  ashe: { start: 450, peak: 830, end: 500, duration: 0.36, formant: 1240 },
+  darius: { start: 310, peak: 560, end: 360, duration: 0.22, formant: 860 },
+  asol: { start: 250, peak: 470, end: 300, duration: 0.4, formant: 740 },
+  lux: { start: 570, peak: 1020, end: 640, duration: 0.33, formant: 1450 },
+  heimer: { start: 390, peak: 720, end: 450, duration: 0.21, formant: 1080 },
+  katarina: { start: 500, peak: 900, end: 570, duration: 0.27, formant: 1280 },
+};
 
 class CosmicAudioEngine {
   private ctx: AudioContext | null = null;
@@ -84,6 +101,35 @@ class CosmicAudioEngine {
 
     osc.start(t);
     osc.stop(t + 0.09);
+  }
+
+  public playCatMeow(type: TileType) {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx || !this.masterGain) return;
+
+    const profile = CAT_MEOWS[type];
+    const now = this.ctx.currentTime;
+    const voice = this.ctx.createOscillator();
+    const formant = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    voice.type = 'sawtooth';
+    voice.frequency.setValueAtTime(profile.start, now);
+    voice.frequency.linearRampToValueAtTime(profile.peak, now + profile.duration * 0.32);
+    voice.frequency.exponentialRampToValueAtTime(profile.end, now + profile.duration);
+    formant.type = 'bandpass';
+    formant.frequency.setValueAtTime(profile.formant, now);
+    formant.Q.setValueAtTime(1.6, now);
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.13, now + 0.025);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + profile.duration);
+
+    voice.connect(formant);
+    formant.connect(gain);
+    gain.connect(this.masterGain);
+    voice.start(now);
+    voice.stop(now + profile.duration + 0.01);
   }
 
   /**
@@ -272,37 +318,6 @@ class CosmicAudioEngine {
       osc.start(t);
       osc.stop(t + 0.1);
     });
-  }
-
-  /**
-   * Смешной писк Поро
-   */
-  public playPoroSqueak() {
-    if (this.isMuted) return;
-    this.initCtx();
-    if (!this.ctx || !this.masterGain) return;
-
-    const t = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(1400, t);
-    osc.frequency.linearRampToValueAtTime(1900, t + 0.06);
-    osc.frequency.linearRampToValueAtTime(1500, t + 0.12);
-
-    gain.gain.setValueAtTime(0.18, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
-
-    osc.connect(gain);
-    gain.connect(this.masterGain);
-
-    osc.start(t);
-    osc.stop(t + 0.15);
-  }
-
-  public playSheepBleat() {
-    this.playPoroSqueak();
   }
 
   /**

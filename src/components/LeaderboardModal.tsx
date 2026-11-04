@@ -41,7 +41,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({
 
   const handleShare = () => {
     const text = userBestTime
-      ? `🏆 Я собрал чемпионов в Try Party: COSMOS за ${formatTimePrecise(userBestTime)}! Сможешь быстрее? 🌌⚡`
+      ? `🏆 Я собрал котиков в Try Party: COSMOS за ${formatTimePrecise(userBestTime)}! Сможешь быстрее? 🌌⚡`
       : `🌌 Прохожу Try Party: COSMOS! Попробуй побить рекорд дня!`;
 
     if (navigator.clipboard) {

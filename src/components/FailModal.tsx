@@ -35,7 +35,7 @@ export const FailModal: React.FC<FailModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md select-none animate-in fade-in duration-150">
       <div className="relative w-full max-w-sm rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-rose-500 shadow-[0_0_35px_rgba(244,63,94,0.4)] p-6 text-white text-center">
-        {/* Poro astronaut alert */}
+        {/* Orbital warning */}
         <div className="w-16 h-16 mx-auto mb-2 rounded-2xl bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(244,63,94,0.5)]">
           🛰️💥
         </div>

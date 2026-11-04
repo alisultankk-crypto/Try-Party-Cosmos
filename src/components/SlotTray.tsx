@@ -1,6 +1,6 @@
 import React from 'react';
 import { TileItemData, Language } from '../types/game';
-import { FunnyCosmicChamps, CHAMPION_METAS } from './FunnyCosmicChamps';
+import { CAT_METAS, CosmicCats } from './CosmicCats';
 
 interface SlotTrayProps {
   slots: TileItemData[];
@@ -30,7 +30,7 @@ export const SlotTray: React.FC<SlotTrayProps> = ({
         {Array.from({ length: maxSlots }).map((_, idx) => {
           const tile = slots[idx];
           const isMatching = tile && matchingIds.includes(tile.id);
-          const meta = tile ? CHAMPION_METAS[tile.type] : null;
+          const meta = tile ? CAT_METAS[tile.type] : null;
 
           return (
             <div
@@ -46,9 +46,12 @@ export const SlotTray: React.FC<SlotTrayProps> = ({
                   }`}
                   style={{
                     borderColor: meta ? meta.accentColor : '#38bdf8',
+                    backgroundImage: meta && !isMatching
+                      ? `linear-gradient(160deg, color-mix(in srgb, ${meta.accentColor} 48%, #111827), color-mix(in srgb, ${meta.accentColor} 22%, #030712))`
+                      : undefined,
                   }}
                 >
-                  <FunnyCosmicChamps type={tile.type} isCovered={false} />
+                  <CosmicCats type={tile.type} isCovered={false} />
                 </div>
               )}
             </div>

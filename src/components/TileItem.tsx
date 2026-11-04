@@ -1,6 +1,6 @@
 import React from 'react';
 import { TileItemData } from '../types/game';
-import { FunnyCosmicChamps, CHAMPION_METAS } from './FunnyCosmicChamps';
+import { CAT_METAS, CosmicCats } from './CosmicCats';
 
 interface TileItemProps {
   tile: TileItemData;
@@ -18,7 +18,7 @@ export const TileItem: React.FC<TileItemProps> = ({
   isHinted = false,
 }) => {
   const isClickable = !tile.isCovered && !tile.inSlot && !tile.inShelf;
-  const meta = CHAMPION_METAS[tile.type] || { accentColor: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.5)' };
+  const meta = CAT_METAS[tile.type];
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -47,7 +47,11 @@ export const TileItem: React.FC<TileItemProps> = ({
             : 'bg-gradient-to-b from-[#0f172a] to-[#020617] border-[#1e293b] shadow-[0_3px_0_#020617]'
         }`}
         style={{
-          borderColor: isClickable && !isHinted ? meta.accentColor + '88' : undefined,
+          borderColor: isClickable && !isHinted ? meta.accentColor : undefined,
+          backgroundImage:
+            isClickable && !isHinted
+              ? `linear-gradient(160deg, color-mix(in srgb, ${meta.accentColor} 48%, #111827), color-mix(in srgb, ${meta.accentColor} 22%, #030712))`
+              : undefined,
           boxShadow: isClickable && !isHinted ? `0 4px 0 #030712, 0 6px 14px ${meta.glowColor}` : undefined,
         }}
       >
@@ -55,13 +59,13 @@ export const TileItem: React.FC<TileItemProps> = ({
         <div className="absolute top-1 left-1 w-1 h-1 rounded-full bg-white/40" />
         <div className="absolute top-1 right-1 w-1 h-1 rounded-full bg-white/40" />
 
-        {/* Funny League of Legends Cosmic Champion Illustration */}
+        {/* Breed-specific cat portrait and elemental mark */}
         <div
           className={`transform transition-transform ${
             isClickable ? 'scale-100' : 'scale-95'
           }`}
         >
-          <FunnyCosmicChamps type={tile.type} isCovered={tile.isCovered} />
+          <CosmicCats type={tile.type} isCovered={tile.isCovered} />
         </div>
 
         {/* Dimming Layer when covered by higher tiles */}
