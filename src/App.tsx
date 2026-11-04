@@ -1,67 +1,74 @@
 /**
  * Try Party: COSMOS — Ultimate Cosmic 3-in-a-Row Party Game.
  * Features:
- * - 10 Progressive Levels with unique color themes, animated backgrounds, and card styles
- * - Progressive tile unlock: Level 1 starts with only 3 champion types, gradually adding more up to 12
- * - Procedural Space Dubstep BGM with wobble bass, half-time beat, and cyber SFX
- * - Poro speaks "УМНИЦА МАШКА" ALOUD in 15 languages via Web Speech API
- * - Cleaned top area (removed distracting top tabs)
- * - Side Dock on the screen edge with Gem Inventory, Daily Rewards, Dubstep, Downloads, & Settings
- * - Persistent level progress (preserved even after defeat, with level replay and selector)
- * - Mobile Packages (.APK, .AAB, Solana Seeker dApp package, and iOS PWA install)
- * - Smooth level advancement upon victory
+ * - 2 Languages: Russian & English (immediate toggle)
+ * - Authentic 8-bit NES/GameBoy retro chiptune BGM & arcade SFX
+ * - Daily Login Reward (7-day calendar track with boosters & rare cosmic gems)
+ * - Gemstones Inventory collection (gems drop 1x per level clear)
+ * - Fullscreen responsive dynamic scaling layout (stretches to fill viewport cleanly)
+ * - Cosmic Poro tells hilarious jokes every 3 successful triple matches
+ * - Personalized celebration & praise for player "Машка" on victory
+ * - Warm, heartfelt encouragement & comfort for "Машка" on defeat
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
+  Volume2,
+  VolumeX,
+  Music,
   RotateCcw,
+  Trophy,
+  Calendar,
+  Gamepad2,
   Maximize2,
   Minimize2,
-  ChevronRight,
-  Sparkles,
+  HelpCircle,
+  Gem,
+  Gift,
 } from 'lucide-react';
 import {
   TileItemData,
   BoostersState,
   TileType,
   GameMode,
+  DailyLeaderboardEntry,
   MagicEffectType,
   Language,
   GemInventory,
   DailyLoginState,
   CosmicGem,
-  MascotId,
 } from './types/game';
 import {
-  generateLevel,
+  generateLevel1,
+  generateLevel2,
+  generateLevel3,
   generateDailyChallenge,
   updateCoveredState,
   getTodayDateString,
+  getFormattedDayLabel,
+  createPRNG,
 } from './game/levelGenerator';
-import { LEVEL_THEMES } from './types/levelTheme';
 import { TileItem } from './components/TileItem';
 import { SlotTray } from './components/SlotTray';
 import { BoosterBar } from './components/BoosterBar';
 import { ReserveShelf } from './components/ReserveShelf';
 import { CosmicPoro } from './components/CosmicPoro';
-import { GalacticNebulaBackground } from './components/GalacticNebulaBackground';
+import { CosmicBackground } from './components/CosmicBackground';
 import { MagicVfxOverlay, MagicBurstTrigger } from './components/MagicVfxOverlay';
 import { CHAMPION_METAS } from './components/FunnyCosmicChamps';
 import { ScoreDisplay, ScoreFloater } from './components/ScoreDisplay';
+import { DailyTimer } from './components/DailyTimer';
+import { LeaderboardModal } from './components/LeaderboardModal';
 import { FailModal } from './components/FailModal';
 import { WinModal } from './components/WinModal';
 import { InventoryModal } from './components/InventoryModal';
 import { DailyRewardModal } from './components/DailyRewardModal';
-import { MobilePackagesModal } from './components/MobilePackagesModal';
-import { LevelSelectModal } from './components/LevelSelectModal';
 import { BrowserHelpModal } from './components/BrowserHelpModal';
 import { BrowserWelcomeBanner } from './components/BrowserWelcomeBanner';
-import { SideDock } from './components/SideDock';
+import { DesktopSidebar } from './components/DesktopSidebar';
 import { puzzleSounds } from './audio/puzzleSounds';
 import { TRANSLATIONS } from './i18n/translations';
-import { getRandomGemDrop, HEXTECH_CRYSTAL } from './data/cosmicGems';
-import { speakMascotPraise, speakPoroPraise, PoroPraisePhrase } from './audio/poroVoice';
-import { usePWAInstall } from './hooks/usePWAInstall';
+import { getRandomGemDrop, COSMIC_GEMS } from './data/cosmicGems';
 
 function findLastTypeIndex(items: TileItemData[], targetType: TileType): number {
   for (let i = items.length - 1; i >= 0; i--) {
@@ -70,8 +77,55 @@ function findLastTypeIndex(items: TileItemData[], targetType: TileType): number 
   return -1;
 }
 
+const DEFAULT_SPEEDRUNNERS = [
+  { name: '⚡ Faker', avatar: '👑', baseTime: 82.4, region: 'KR (T1)' },
+  { name: '🗡️ YasuoMain_07', avatar: '🌪️', baseTime: 98.5, region: 'EUW (Ionia)' },
+  { name: '🦊 AhriSpirit', avatar: '🌸', baseTime: 112.8, region: 'RU (Freljord)' },
+  { name: '💣 JinxRockets', avatar: '🚀', baseTime: 125.4, region: 'NA (Zaun)' },
+  { name: '🍄 TeemoShroom', avatar: '🍄', baseTime: 139.9, region: 'EUNE (Bandle)' },
+  { name: '✨ LuxLaser', avatar: '✨', baseTime: 154.3, region: 'CN (Demacia)' },
+  { name: '🌌 AsolGalaxy', avatar: '⭐', baseTime: 168.7, region: 'BR (Targon)' },
+  { name: '⚔️ GarenSpin', avatar: '🛡️', baseTime: 182.1, region: 'JP (Noxus)' },
+];
+
+function generateDailyLeaderboard(dateStr: string, userTime: number | null, isRu: boolean): DailyLeaderboardEntry[] {
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = (hash << 5) - hash + dateStr.charCodeAt(i);
+    hash |= 0;
+  }
+  const prng = createPRNG(Math.abs(hash) || 987654);
+
+  const list: DailyLeaderboardEntry[] = DEFAULT_SPEEDRUNNERS.map((runner, idx) => {
+    const variance = (prng() - 0.5) * 16;
+    const timeSeconds = Math.round((runner.baseTime + variance) * 100) / 100;
+    return {
+      rank: idx + 1,
+      playerName: runner.name,
+      avatar: runner.avatar,
+      timeSeconds,
+      region: runner.region,
+      isUser: false,
+    };
+  });
+
+  if (userTime !== null) {
+    list.push({
+      rank: 99,
+      playerName: isRu ? 'Машка (Чемпион) 👑' : 'Mashka (Champion) 👑',
+      avatar: '🌟',
+      timeSeconds: userTime,
+      region: isRu ? 'Галактика Машки' : 'Mashka Galaxy',
+      isUser: true,
+    });
+  }
+
+  list.sort((a, b) => a.timeSeconds - b.timeSeconds);
+  return list.map((item, idx) => ({ ...item, rank: idx + 1 }));
+}
+
 export default function App() {
-  // 1. Language state (ru / en)
+  // 1. Language state
   const [lang, setLang] = useState<Language>(() => {
     try {
       const saved = localStorage.getItem('tryparty_lang') as Language;
@@ -90,45 +144,25 @@ export default function App() {
     } catch {}
   };
 
-  // 2. Progressive 10-Level System & Persistent Progress
-  const [level, setLevel] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('tryparty_current_level');
-      if (saved) {
-        const parsed = parseInt(saved, 10);
-        if (parsed >= 1 && parsed <= 10) return parsed;
-      }
-    } catch {}
-    return 1;
-  });
+  const [mode, setMode] = useState<GameMode>('campaign');
+  const [level, setLevel] = useState<number>(1);
 
-  const [unlockedLevel, setUnlockedLevel] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('tryparty_unlocked_level');
-      if (saved) {
-        const parsed = parseInt(saved, 10);
-        if (parsed >= 1 && parsed <= 10) return parsed;
-      }
-    } catch {}
-    return 1;
-  });
+  // Daily Challenge state
+  const [todayDateStr, setTodayDateStr] = useState<string>(getTodayDateString());
+  const [dayLabel, setDayLabel] = useState<string>(getFormattedDayLabel(getTodayDateString()));
+  const [timerRunning, setTimerRunning] = useState<boolean>(false);
+  const [timerSeconds, setTimerSeconds] = useState<number>(0);
+  const [userBestDailyTime, setUserBestDailyTime] = useState<number | null>(null);
+  const [dailyCompletionTime, setDailyCompletionTime] = useState<number | null>(null);
+  const [dailyRank, setDailyRank] = useState<number | undefined>(undefined);
+  const [isNewBest, setIsNewBest] = useState<boolean>(false);
+  const [dailyLeaderboard, setDailyLeaderboard] = useState<DailyLeaderboardEntry[]>([]);
 
-  const currentTheme = LEVEL_THEMES[level] || LEVEL_THEMES[1];
+  const timerStartRef = useRef<number>(0);
+  const timerFrameRef = useRef<number>(0);
 
-  // Modals state
-  const [showLevelSelect, setShowLevelSelect] = useState<boolean>(false);
-  const [showInventoryModal, setShowInventoryModal] = useState<boolean>(false);
-  const [showDailyRewardModal, setShowDailyRewardModal] = useState<boolean>(false);
-  const [showMobilePackagesModal, setShowMobilePackagesModal] = useState<boolean>(false);
-  const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
-  const [showWelcomeBanner, setShowWelcomeBanner] = useState<boolean>(true);
-
-  // Audio State (Dubstep Engine)
-  const [isMuted, setIsMuted] = useState<boolean>(puzzleSounds.getMuted());
-  const [bgmActive, setBgmActive] = useState<boolean>(false);
-
-  // Browser Fullscreen State
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  // Magic VFX Trigger State
+  const [magicBurst, setMagicBurst] = useState<MagicBurstTrigger | null>(null);
 
   // Board state
   const [tiles, setTiles] = useState<TileItemData[]>([]);
@@ -138,169 +172,39 @@ export default function App() {
   const [history, setHistory] = useState<{ tileId: string; fromBoardX: number; fromBoardY: number }[]>([]);
 
   const [boosters, setBoosters] = useState<BoostersState>({
-    undo: 4,
-    shuffle: 4,
-    extract: 4,
+    undo: 3,
+    shuffle: 3,
+    extract: 3,
   });
 
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
   const [isVictory, setIsVictory] = useState<boolean>(false);
+  const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
   const [hasRevive, setHasRevive] = useState<boolean>(true);
 
-  // Magic VFX Trigger State
-  const [magicBurst, setMagicBurst] = useState<MagicBurstTrigger | null>(null);
+  // Audio State
+  const [isMuted, setIsMuted] = useState<boolean>(puzzleSounds.getMuted());
+  const [bgmActive, setBgmActive] = useState<boolean>(false);
 
-  // 💎 Gem Inventory
+  // Browser Experience States
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState<boolean>(true);
+
+  // 💎 Gem Inventory State
   const [gemInventory, setGemInventory] = useState<GemInventory>(() => {
     try {
       const saved = localStorage.getItem('cosmic_gems_inventory');
       if (saved) return JSON.parse(saved);
     } catch {}
     return {
-      freljord_emerald: 1,
+      freljord_emerald: 1, // starter bonus gem
     };
   });
+  const [showInventoryModal, setShowInventoryModal] = useState<boolean>(false);
   const [droppedGem, setDroppedGem] = useState<CosmicGem | null>(null);
 
-  // 🪙 Gold Coins State
-  const [coins, setCoins] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('tryparty_coins');
-      if (saved) return parseInt(saved, 10);
-    } catch {}
-    return 150; // Starting 150 gold coins
-  });
-
-  // 🐾 Active Mascot & Owned Animals (Poro, Cat, Piglet)
-  const [activeMascot, setActiveMascot] = useState<MascotId>(() => {
-    try {
-      const saved = localStorage.getItem('tryparty_active_mascot') as MascotId;
-      if (saved === 'poro' || saved === 'cat' || saved === 'piglet') return saved;
-    } catch {}
-    return 'poro';
-  });
-
-  const [ownedMascots, setOwnedMascots] = useState<MascotId[]>(() => {
-    try {
-      const saved = localStorage.getItem('tryparty_owned_mascots');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return ['poro'];
-  });
-
-  // 💖 10 Compliments Pack Counter
-  const [complimentsRemaining, setComplimentsRemaining] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('tryparty_compliments_rem');
-      if (saved) return parseInt(saved, 10);
-    } catch {}
-    return 0;
-  });
-
-  // ⚡ 3-Levels Progress for Arcane Hextech Crystal Drop
-  const [threeLevelProgress, setThreeLevelProgress] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('tryparty_3level_progress');
-      if (saved) return parseInt(saved, 10);
-    } catch {}
-    return 0;
-  });
-
-  const handleExchangeGem = (gemId: string, count: number, totalCoinsEarned: number) => {
-    setGemInventory((prev) => {
-      const current = prev[gemId] || 0;
-      const nextCount = Math.max(0, current - count);
-      const next = { ...prev, [gemId]: nextCount };
-      try { localStorage.setItem('cosmic_gems_inventory', JSON.stringify(next)); } catch {}
-      return next;
-    });
-    setCoins((prev) => {
-      const updated = prev + totalCoinsEarned;
-      try { localStorage.setItem('tryparty_coins', String(updated)); } catch {}
-      return updated;
-    });
-  };
-
-  const handleExchangeDuplicates = (totalCoinsEarned: number, updatedInventory: GemInventory) => {
-    setGemInventory(updatedInventory);
-    try { localStorage.setItem('cosmic_gems_inventory', JSON.stringify(updatedInventory)); } catch {}
-    setCoins((prev) => {
-      const updated = prev + totalCoinsEarned;
-      try { localStorage.setItem('tryparty_coins', String(updated)); } catch {}
-      return updated;
-    });
-  };
-
-  const handleBuyMascotWithCoins = (mascotId: MascotId, cost: number) => {
-    if (coins < cost) return;
-    setCoins((prev) => {
-      const updated = prev - cost;
-      try { localStorage.setItem('tryparty_coins', String(updated)); } catch {}
-      return updated;
-    });
-    setOwnedMascots((prev) => {
-      if (prev.includes(mascotId)) return prev;
-      const next = [...prev, mascotId];
-      try { localStorage.setItem('tryparty_owned_mascots', JSON.stringify(next)); } catch {}
-      return next;
-    });
-    setActiveMascot(mascotId);
-    try { localStorage.setItem('tryparty_active_mascot', mascotId); } catch {}
-  };
-
-  const handleBuyMascotWithHextech = (mascotId: MascotId) => {
-    const currentHextech = gemInventory['hextech_arcane_crystal'] || 0;
-    if (currentHextech < 1) return;
-    setGemInventory((prev) => {
-      const next = { ...prev, hextech_arcane_crystal: Math.max(0, (prev['hextech_arcane_crystal'] || 0) - 1) };
-      try { localStorage.setItem('cosmic_gems_inventory', JSON.stringify(next)); } catch {}
-      return next;
-    });
-    setOwnedMascots((prev) => {
-      if (prev.includes(mascotId)) return prev;
-      const next = [...prev, mascotId];
-      try { localStorage.setItem('tryparty_owned_mascots', JSON.stringify(next)); } catch {}
-      return next;
-    });
-    setActiveMascot(mascotId);
-    try { localStorage.setItem('tryparty_active_mascot', mascotId); } catch {}
-  };
-
-  const handleSelectMascot = (mascotId: MascotId) => {
-    setActiveMascot(mascotId);
-    try { localStorage.setItem('tryparty_active_mascot', mascotId); } catch {}
-  };
-
-  const handleBuyComplimentsWithCoins = (cost: number, count: number) => {
-    if (coins < cost) return;
-    setCoins((prev) => {
-      const updated = prev - cost;
-      try { localStorage.setItem('tryparty_coins', String(updated)); } catch {}
-      return updated;
-    });
-    setComplimentsRemaining((prev) => {
-      const updated = prev + count;
-      try { localStorage.setItem('tryparty_compliments_rem', String(updated)); } catch {}
-      return updated;
-    });
-  };
-
-  const handleBuyComplimentsWithHextech = (count: number) => {
-    const currentHextech = gemInventory['hextech_arcane_crystal'] || 0;
-    if (currentHextech < 1) return;
-    setGemInventory((prev) => {
-      const next = { ...prev, hextech_arcane_crystal: Math.max(0, (prev['hextech_arcane_crystal'] || 0) - 1) };
-      try { localStorage.setItem('cosmic_gems_inventory', JSON.stringify(next)); } catch {}
-      return next;
-    });
-    setComplimentsRemaining((prev) => {
-      const updated = prev + count;
-      try { localStorage.setItem('tryparty_compliments_rem', String(updated)); } catch {}
-      return updated;
-    });
-  };
-
-  // 🎁 Daily Login State
+  // 🎁 Daily Login Reward State
   const [dailyLogin, setDailyLogin] = useState<DailyLoginState>(() => {
     const today = getTodayDateString();
     try {
@@ -324,12 +228,18 @@ export default function App() {
       hasClaimedToday: false,
     };
   });
+  const [showDailyRewardModal, setShowDailyRewardModal] = useState<boolean>(false);
 
-  // 🗣️ Poro Voice Praise State ("УМНИЦА МАШКА" in 15 languages)
-  const [poroPraise, setPoroPraise] = useState<PoroPraisePhrase | null>(null);
+  // 🐾 Poro Jokes on every 3 matches!
+  const matchCountRef = useRef<number>(0);
+  const [poroJoke, setPoroJoke] = useState<string | null>(null);
+  const poroJokeTimerRef = useRef<number | null>(null);
+
+  // Responsive Board Scaling (Dynamic screen stretching)
+  const [boardScale, setBoardScale] = useState<number>(1);
+
+  // Poro Mascot Animation State
   const [isPoroCheering, setIsPoroCheering] = useState<boolean>(false);
-  const poroPraiseTimerRef = useRef<number | null>(null);
-  const matchCounterRef = useRef<number>(0);
 
   // Oracle Hint state
   const [hintedTileTypes, setHintedTileTypes] = useState<TileType[]>([]);
@@ -348,23 +258,20 @@ export default function App() {
   const [floaters, setFloaters] = useState<ScoreFloater[]>([]);
   const comboRef = useRef<number>(1);
 
-  // PWA install hook
-  const { isInstallable: isPwaInstallable, install: installPwa } = usePWAInstall();
-
-  // Responsive scale calculator for comfortable fullscreen stretch
-  const [boardScale, setBoardScale] = useState<number>(1);
-
+  // Responsive scale calculator so game comfortably stretches to fill any viewport
   useEffect(() => {
     const updateScale = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
+
+      // Calculate dynamic scale factor
       let scale = 1;
-      if (w >= 1200 && h >= 750) {
-        scale = 1.3;
-      } else if (w >= 768 && h >= 680) {
-        scale = 1.18;
-      } else if (w >= 480 && h >= 640) {
-        scale = 1.08;
+      if (w >= 1200 && h >= 800) {
+        scale = 1.35;
+      } else if (w >= 768 && h >= 700) {
+        scale = 1.2;
+      } else if (w >= 500 && h >= 650) {
+        scale = 1.1;
       } else if (w < 380 || h < 600) {
         scale = 0.88;
       }
@@ -376,21 +283,64 @@ export default function App() {
     return () => window.removeEventListener('resize', updateScale);
   }, []);
 
-  // Save current level when changed
+  // Check today's daily date string
   useEffect(() => {
-    try {
-      localStorage.setItem('tryparty_current_level', String(level));
-    } catch {}
-    startLevelGame(level);
-  }, [level]);
+    const today = getTodayDateString();
+    setTodayDateStr(today);
+    setDayLabel(getFormattedDayLabel(today));
 
-  // Load level layout
-  const startLevelGame = (targetLevel: number) => {
+    try {
+      const savedBest = localStorage.getItem(`daily_best_${today}`);
+      if (savedBest) {
+        const parsed = parseFloat(savedBest);
+        setUserBestDailyTime(parsed);
+      }
+    } catch {}
+
+    setDailyLeaderboard(generateDailyLeaderboard(today, userBestDailyTime, lang === 'ru'));
+  }, [lang]);
+
+  // Daily Timer tick
+  useEffect(() => {
+    if (timerRunning) {
+      const updateTimer = () => {
+        const elapsed = (performance.now() - timerStartRef.current) / 1000;
+        setTimerSeconds(elapsed);
+        timerFrameRef.current = requestAnimationFrame(updateTimer);
+      };
+      timerFrameRef.current = requestAnimationFrame(updateTimer);
+    } else {
+      cancelAnimationFrame(timerFrameRef.current);
+    }
+    return () => cancelAnimationFrame(timerFrameRef.current);
+  }, [timerRunning]);
+
+  // Initialize board when mode or level changes
+  useEffect(() => {
+    startCurrentGame();
+  }, [mode, level]);
+
+  const startCurrentGame = () => {
+    setTimerRunning(false);
+    setTimerSeconds(0);
+    setDailyCompletionTime(null);
+    setIsNewBest(false);
     setMagicBurst(null);
     setDroppedGem(null);
 
-    const newTiles = generateLevel(targetLevel);
-    setTiles(newTiles);
+    let initialTiles: TileItemData[];
+
+    if (mode === 'daily') {
+      const challenge = generateDailyChallenge(todayDateStr);
+      initialTiles = challenge.tiles;
+      setDayLabel(challenge.dayLabel);
+    } else {
+      if (level === 1) initialTiles = generateLevel1();
+      else if (level === 2) initialTiles = generateLevel2();
+      else initialTiles = generateLevel3();
+    }
+
+    setTiles(initialTiles);
     setSlot([]);
     setShelf([]);
     setMatchingIds([]);
@@ -403,20 +353,28 @@ export default function App() {
     setCombo(1);
     setFloaters([]);
 
-    // Generous booster allocation so player always has tactical tools
+    if (level === 1 || mode === 'daily') {
+      setScore(0);
+    }
+
     setBoosters({
-      undo: 4,
-      shuffle: 4,
-      extract: 4,
+      undo: mode === 'daily' ? 3 : level === 1 ? 5 : 3,
+      shuffle: mode === 'daily' ? 3 : level === 1 ? 5 : 3,
+      extract: mode === 'daily' ? 3 : level === 1 ? 5 : 3,
     });
   };
 
-  // Handle tile tap on the board
+  // Handle clicking a tile on the board
   const handleTileClick = (clickedTile: TileItemData) => {
     if (clickedTile.isCovered || clickedTile.inSlot || clickedTile.inShelf || isGameOver || isVictory) {
       return;
     }
     if (slot.length >= 7) return;
+
+    if (mode === 'daily' && !timerRunning) {
+      timerStartRef.current = performance.now() - timerSeconds * 1000;
+      setTimerRunning(true);
+    }
 
     if (showWelcomeBanner) {
       setShowWelcomeBanner(false);
@@ -449,7 +407,7 @@ export default function App() {
     checkSlotMatches(newSlot, updatedTiles);
   };
 
-  // Handle clicking a tile on the Reserve Shelf
+  // Handle clicking a tile from the Reserve Shelf
   const handleShelfTileClick = (shelfTile: TileItemData) => {
     if (slot.length >= 7 || isGameOver || isVictory) return;
 
@@ -471,7 +429,7 @@ export default function App() {
     checkSlotMatches(newSlot, tiles);
   };
 
-  // Check 3 matching champions in tray
+  // Check if 3 matching champions exist in the slot
   const checkSlotMatches = (currentSlot: TileItemData[], currentTiles: TileItemData[]) => {
     const counts: { [type: string]: TileItemData[] } = {};
     for (const item of currentSlot) {
@@ -491,28 +449,23 @@ export default function App() {
         const championMeta = CHAMPION_METAS[type];
         const magicType: MagicEffectType = championMeta ? championMeta.magic : 'arcane';
         const currentCombo = comboRef.current;
-        const earnedPoints = 350 * currentCombo;
+        const earnedPoints = 300 * currentCombo;
 
         puzzleSounds.playMagicEffect(magicType, currentCombo);
         comboRef.current++;
         setCombo(comboRef.current);
 
-        // 🗣️ Mascot speaks "УМНИЦА МАШКА" in 15 languages!
-        matchCounterRef.current += 1;
-        const useSpecial = complimentsRemaining > 0;
-        if (useSpecial) {
-          setComplimentsRemaining((prev) => {
-            const next = Math.max(0, prev - 1);
-            try { localStorage.setItem('tryparty_compliments_rem', String(next)); } catch {}
-            return next;
-          });
+        // Track match count for Poro jokes!
+        matchCountRef.current += 1;
+        if (matchCountRef.current > 0 && matchCountRef.current % 3 === 0) {
+          const jokes = t.poroJokes;
+          const joke = jokes[Math.floor(Math.random() * jokes.length)];
+          setPoroJoke(joke);
+          if (poroJokeTimerRef.current) clearTimeout(poroJokeTimerRef.current);
+          poroJokeTimerRef.current = window.setTimeout(() => {
+            setPoroJoke(null);
+          }, 5500);
         }
-        const praise = speakMascotPraise(activeMascot, undefined, useSpecial);
-        setPoroPraise(praise);
-        if (poroPraiseTimerRef.current) clearTimeout(poroPraiseTimerRef.current);
-        poroPraiseTimerRef.current = window.setTimeout(() => {
-          setPoroPraise(null);
-        }, 4500);
 
         setScore((prev) => {
           const next = prev + earnedPoints;
@@ -526,7 +479,7 @@ export default function App() {
           return next;
         });
 
-        // Score floater
+        // Trigger score floater
         const floaterX = window.innerWidth / 2 + (Math.random() - 0.5) * 80;
         const floaterY = window.innerHeight - 150;
         const newFloater: ScoreFloater = {
@@ -535,9 +488,9 @@ export default function App() {
           combo: currentCombo,
           text:
             currentCombo >= 3
-              ? `🔥 MEGA-DROP x${currentCombo}! +${earnedPoints}`
+              ? `🔥 MEGA-COMBO x${currentCombo}! +${earnedPoints}`
               : currentCombo === 2
-              ? `⚡ DUBSTEP x2! +${earnedPoints}`
+              ? `⚡ COMBO x2! +${earnedPoints}`
               : `+${earnedPoints} PTS!`,
           x: floaterX,
           y: floaterY,
@@ -581,6 +534,7 @@ export default function App() {
 
     if (!matchFound) {
       if (currentSlot.length >= 7) {
+        setTimerRunning(false);
         setTimeout(() => {
           setIsGameOver(true);
           puzzleSounds.playDefeat();
@@ -591,33 +545,13 @@ export default function App() {
     }
   };
 
-  // Victory Handler
   const handleVictory = () => {
     setIsVictory(true);
+    setTimerRunning(false);
     puzzleSounds.playVictory();
 
-    // 🪙 Reward 50 gold coins per victory
-    const coinsWon = 50;
-    setCoins((prev) => {
-      const updated = prev + coinsWon;
-      try { localStorage.setItem('tryparty_coins', String(updated)); } catch {}
-      return updated;
-    });
-
-    // ⚡ Check if 3-levels milestone is met for the Hextech Crystal from Arcane!
-    const newProgress = threeLevelProgress + 1;
-    let dropped: CosmicGem;
-    if (newProgress >= 3 || level % 3 === 0) {
-      dropped = HEXTECH_CRYSTAL;
-      setThreeLevelProgress(0);
-      try { localStorage.setItem('tryparty_3level_progress', '0'); } catch {}
-      puzzleSounds.playHextechSurge();
-    } else {
-      dropped = getRandomGemDrop();
-      setThreeLevelProgress(newProgress);
-      try { localStorage.setItem('tryparty_3level_progress', String(newProgress)); } catch {}
-    }
-
+    // 💎 Gem Drop Reward: Drops 1x per level victory!
+    const dropped = getRandomGemDrop();
     setDroppedGem(dropped);
     setGemInventory((prev) => {
       const next = { ...prev, [dropped.id]: (prev[dropped.id] || 0) + 1 };
@@ -627,20 +561,6 @@ export default function App() {
       return next;
     });
 
-    // Mascot announces victory aloud
-    const victoryPraise = speakMascotPraise(activeMascot, 0, complimentsRemaining > 0);
-    setPoroPraise(victoryPraise);
-
-    // Unlock next level in persistent progress
-    const nextLvl = Math.min(level + 1, 10);
-    setUnlockedLevel((prev) => {
-      const updated = Math.max(prev, nextLvl);
-      try {
-        localStorage.setItem('tryparty_unlocked_level', String(updated));
-      } catch {}
-      return updated;
-    });
-
     setMagicBurst({
       id: `victory_${Date.now()}`,
       type: 'starlight',
@@ -648,16 +568,43 @@ export default function App() {
       y: window.innerHeight / 2,
     });
 
-    const victoryBonus = level * 2500;
-    setScore((prev) => prev + victoryBonus);
-  };
+    const victoryBonus = mode === 'daily' ? 5000 : level * 2000;
+    setScore((prev) => {
+      const next = prev + victoryBonus;
+      setHighScore((curHigh) => {
+        const newHigh = Math.max(curHigh, next);
+        try {
+          localStorage.setItem('cosmic_high_score', String(newHigh));
+        } catch {}
+        return newHigh;
+      });
+      return next;
+    });
 
-  // Transition to Next Level (Fixing previous bug!)
-  const handleAdvanceToNextLevel = () => {
-    setIsVictory(false);
-    const nextLvl = level < 10 ? level + 1 : 1;
-    setLevel(nextLvl);
-    // startLevelGame is automatically called by useEffect([level])
+    if (mode === 'daily') {
+      const finalTime = (performance.now() - timerStartRef.current) / 1000;
+      const roundedTime = Math.round(finalTime * 100) / 100;
+      setDailyCompletionTime(roundedTime);
+
+      let isBest = false;
+      if (!userBestDailyTime || roundedTime < userBestDailyTime) {
+        isBest = true;
+        setUserBestDailyTime(roundedTime);
+        setIsNewBest(true);
+        try {
+          localStorage.setItem(`daily_best_${todayDateStr}`, String(roundedTime));
+        } catch {}
+      }
+
+      const updatedList = generateDailyLeaderboard(
+        todayDateStr,
+        isBest ? roundedTime : userBestDailyTime || roundedTime,
+        lang === 'ru'
+      );
+      setDailyLeaderboard(updatedList);
+      const userRank = updatedList.find((e) => e.isUser)?.rank || 1;
+      setDailyRank(userRank);
+    }
   };
 
   // Booster: Extract 3
@@ -755,6 +702,11 @@ export default function App() {
     setIsGameOver(false);
     puzzleSounds.playBooster();
 
+    if (mode === 'daily') {
+      timerStartRef.current = performance.now() - timerSeconds * 1000;
+      setTimerRunning(true);
+    }
+
     const extractCount = Math.min(3, slot.length);
     const toExtract = slot.slice(0, extractCount).map((t) => ({ ...t, inSlot: false, inShelf: true }));
     const remainingSlot = slot.slice(extractCount);
@@ -790,6 +742,7 @@ export default function App() {
       const active = puzzleSounds.toggleBGM();
       setBgmActive(active);
     }
+    // Check if daily reward can be claimed
     if (!dailyLogin.hasClaimedToday) {
       setTimeout(() => setShowDailyRewardModal(true), 600);
     }
@@ -817,13 +770,14 @@ export default function App() {
     const updatedDaily: DailyLoginState = {
       ...dailyLogin,
       hasClaimedToday: true,
-      lastClaimDate: getTodayDateString(),
+      lastClaimDate: todayDateStr,
     };
     setDailyLogin(updatedDaily);
     try {
       localStorage.setItem('cosmic_daily_login', JSON.stringify(updatedDaily));
     } catch {}
 
+    // Score Floater celebration
     const claimFloater: ScoreFloater = {
       id: `daily_${Date.now()}`,
       points: 1000,
@@ -842,7 +796,7 @@ export default function App() {
     }, 1200);
   };
 
-  // Keyboard Shortcuts
+  // Browser Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
@@ -873,12 +827,9 @@ export default function App() {
       } else if (key === 'i') {
         e.preventDefault();
         setShowInventoryModal((prev) => !prev);
-      } else if (key === 'l') {
-        e.preventDefault();
-        setShowLevelSelect((prev) => !prev);
       } else if (key === 'r') {
         e.preventDefault();
-        startLevelGame(level);
+        startCurrentGame();
       } else if (key === 'h' || key === '?') {
         e.preventDefault();
         setShowHelpModal((prev) => !prev);
@@ -887,16 +838,15 @@ export default function App() {
         handleStartFromBanner();
       } else if (e.key === 'Escape') {
         setShowHelpModal(false);
+        setShowLeaderboard(false);
         setShowInventoryModal(false);
         setShowDailyRewardModal(false);
-        setShowLevelSelect(false);
-        setShowMobilePackagesModal(false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [boosters, history, slot, tiles, showWelcomeBanner, bgmActive, level]);
+  }, [boosters, history, slot, tiles, showWelcomeBanner, bgmActive]);
 
   const remainingTilesCount = tiles.filter(
     (t) => !t.isEliminated && !t.inSlot && !t.inShelf
@@ -905,118 +855,215 @@ export default function App() {
   const totalGemsCount = Object.values(gemInventory).reduce((acc, c) => acc + c, 0);
 
   return (
-    <div className="relative min-h-[100dvh] w-full bg-[#020617] text-slate-100 flex flex-col justify-between items-center overflow-x-hidden select-none font-sans">
-      {/* 1. Animated Galactic Nebula Background with Level Color Transition */}
-      <GalacticNebulaBackground level={level} />
+    <div className="relative min-h-[100dvh] w-full bg-[#030712] text-slate-100 flex flex-col justify-between items-center overflow-x-hidden select-none font-sans">
+      {/* 1. Animated Deep Space Canvas Background */}
+      <CosmicBackground />
 
       {/* 2. Magic Canvas VFX Explosions */}
       <MagicVfxOverlay burst={magicBurst} />
 
-      {/* 3. Floating Side Dock (Inventory, Coins, Daily Reward, Dubstep, Downloads, Settings) */}
-      <SideDock
-        totalGems={totalGemsCount}
-        coins={coins}
-        activeMascot={activeMascot}
-        hasDailyUnclaimed={!dailyLogin.hasClaimedToday}
+      {/* 3. Desktop Sidebars (Visible on extra-wide screens) */}
+      <DesktopSidebar
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={handleToggleFullscreen}
         bgmActive={bgmActive}
+        onToggleBGM={handleToggleBGM}
         isMuted={isMuted}
-        lang={lang}
+        onToggleMute={handleToggleMute}
+        onOpenHelp={() => setShowHelpModal(true)}
         onOpenInventory={() => setShowInventoryModal(true)}
         onOpenDailyReward={() => setShowDailyRewardModal(true)}
-        onOpenMobilePackages={() => setShowMobilePackagesModal(true)}
-        onToggleBGM={handleToggleBGM}
-        onToggleMute={handleToggleMute}
-        onToggleLang={handleToggleLang}
-        onOpenHelp={() => setShowHelpModal(true)}
+        combo={combo}
+        lang={lang}
       />
 
-      {/* 4. CLEAN MINIMALIST TOP BAR (No bulky distracting pills!) */}
-      <header className="relative z-20 w-full max-w-3xl px-3 pt-2.5 flex flex-col gap-1.5">
+      {/* 4. Cosmic Sci-Fi Top Header */}
+      <header className="relative z-20 w-full max-w-2xl px-3 pt-2.5 flex flex-col gap-2">
         <div className="flex items-center justify-between w-full flex-wrap gap-2">
-          {/* Level Progress Indicator & Selector */}
-          <button
-            onClick={() => setShowLevelSelect(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-slate-900/90 hover:bg-slate-850 backdrop-blur-md border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.25)] transition active:scale-95 group"
-            title={lang === 'ru' ? 'Выбрать уровень [L]' : 'Select Level [L]'}
-          >
-            <span
-              className="w-2.5 h-2.5 rounded-full animate-ping"
-              style={{ backgroundColor: currentTheme.accentColor }}
-            />
-            <div className="flex flex-col text-left">
-              <span className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1">
-                <span>{lang === 'ru' ? `УРОВЕНЬ ${level} / 10` : `LEVEL ${level} / 10`}</span>
-                <ChevronRight className="w-3.5 h-3.5 text-cyan-400 group-hover:translate-x-0.5 transition-transform" />
-              </span>
-              <span className="text-[10px] text-cyan-300 font-semibold truncate max-w-[170px] sm:max-w-xs">
-                {lang === 'ru' ? currentTheme.nameRu : currentTheme.nameEn}
-              </span>
-            </div>
-          </button>
+          {/* Game Brand & Mode Switcher */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+              <button
+                onClick={() => setMode('campaign')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition ${
+                  mode === 'campaign'
+                    ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.6)]'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <Gamepad2 className="w-3.5 h-3.5" />
+                <span>{t.campaignMode}</span>
+              </button>
 
-          {/* Quick Score HUD */}
-          <div className="flex items-center gap-3">
-            <ScoreDisplay score={score} highScore={highScore} combo={combo} floaters={floaters} />
-
-            {/* Remaining Tiles Counter */}
-            <div
-              className="px-3 py-1.5 rounded-2xl bg-slate-900/90 backdrop-blur-md border text-white shadow-md text-xs font-bold font-mono"
-              style={{ borderColor: currentTheme.cardBorder }}
-            >
-              {lang === 'ru' ? 'Осталось: ' : 'Left: '}
-              <span className="font-black text-yellow-300">{remainingTilesCount}</span>
+              <button
+                onClick={() => setMode('daily')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black transition ${
+                  mode === 'daily'
+                    ? 'bg-amber-400 text-slate-950 shadow-[0_0_12px_rgba(250,204,21,0.6)]'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{t.dailyMode}</span>
+              </button>
             </div>
 
-            {/* Restart Level [R] */}
+            {/* Language Switcher Badge (RU / EN) */}
             <button
-              onClick={() => startLevelGame(level)}
-              className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-white shadow-sm transition active:scale-95"
-              title={lang === 'ru' ? 'Перезапустить уровень [R]' : 'Restart Level [R]'}
+              onClick={handleToggleLang}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-cyan-500/30 text-cyan-300 text-xs font-black active:scale-95 transition shadow-sm"
+              title="Переключить язык / Switch Language"
             >
-              <RotateCcw className="w-4 h-4 text-yellow-400" />
+              <span>{lang === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'}</span>
+            </button>
+          </div>
+
+          {/* Quick Actions & Controls */}
+          <div className="flex items-center gap-1.5">
+            {/* 💎 Gem Inventory Button */}
+            <button
+              onClick={() => setShowInventoryModal(true)}
+              className="relative p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-cyan-400/50 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)] transition active:scale-95 flex items-center gap-1"
+              title={`${t.inventoryBtn} [I]`}
+            >
+              <Gem className="w-4 h-4 text-cyan-300" />
+              {totalGemsCount > 0 && (
+                <span className="text-[11px] font-black font-mono text-cyan-200 hidden sm:inline">
+                  {totalGemsCount}
+                </span>
+              )}
             </button>
 
-            {/* Fullscreen Toggle [F] */}
+            {/* 🎁 Daily Reward Button */}
+            <button
+              onClick={() => setShowDailyRewardModal(true)}
+              className="relative p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-yellow-400/50 text-yellow-300 shadow-[0_0_12px_rgba(250,204,21,0.3)] transition active:scale-95"
+              title={t.dailyRewardBtn}
+            >
+              <Gift className="w-4 h-4 text-yellow-400" />
+              {!dailyLogin.hasClaimedToday && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+              )}
+            </button>
+
+            {/* 8-bit Retro Music Toggle */}
+            <button
+              onClick={handleToggleBGM}
+              className={`p-2 rounded-xl border backdrop-blur-md transition active:scale-95 shadow-sm ${
+                bgmActive
+                  ? 'bg-cyan-400 border-cyan-300 text-slate-950 shadow-[0_0_12px_rgba(34,211,238,0.7)] animate-pulse'
+                  : 'bg-slate-900/80 border-slate-700 text-slate-300'
+              }`}
+              title={`${bgmActive ? t.musicOn : t.musicOff} [B]`}
+            >
+              <Music className="w-4 h-4" />
+            </button>
+
+            {/* Sound Toggle */}
+            <button
+              onClick={handleToggleMute}
+              className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-white shadow-sm transition active:scale-95"
+              title={isMuted ? t.soundOff : t.soundOn}
+            >
+              {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
+            </button>
+
+            {/* Help / Shortcuts Modal */}
+            <button
+              onClick={() => setShowHelpModal(true)}
+              className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-sky-400 hover:text-white shadow-sm transition active:scale-95"
+              title={`${t.rulesBtn} [H]`}
+            >
+              <HelpCircle className="w-4 h-4" />
+            </button>
+
+            {/* Fullscreen Toggle */}
             <button
               onClick={handleToggleFullscreen}
               className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-cyan-400 hover:text-white shadow-sm transition active:scale-95 hidden sm:flex"
-              title="Fullscreen [F]"
+              title={`${isFullscreen ? t.exitFullscreen : t.fullscreen} [F]`}
             >
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
+
+            {/* Daily Leaderboard */}
+            <button
+              onClick={() => setShowLeaderboard(true)}
+              className="p-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 border border-yellow-300 shadow-[0_0_15px_rgba(250,204,21,0.5)] transition active:scale-95"
+              title={t.speedrunLeaderboard}
+            >
+              <Trophy className="w-4 h-4 fill-current" />
+            </button>
+
+            {/* Restart Level */}
+            <button
+              onClick={startCurrentGame}
+              className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-white shadow-sm transition active:scale-95"
+              title="[R]"
+            >
+              <RotateCcw className="w-4 h-4 text-yellow-400" />
+            </button>
           </div>
         </div>
+
+        {/* Live Score, High Score & Combo Multiplier HUD */}
+        <div className="flex items-center justify-between w-full">
+          <ScoreDisplay score={score} highScore={highScore} combo={combo} floaters={floaters} />
+        </div>
+
+        {/* Status Sub-Header */}
+        {mode === 'daily' ? (
+          <div className="flex items-center justify-between w-full">
+            <DailyTimer
+              elapsedSeconds={timerSeconds}
+              isRunning={timerRunning}
+              dayLabel={dayLabel}
+              bestTimeSeconds={userBestDailyTime}
+            />
+            <div className="px-3 py-1 rounded-2xl bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 text-white shadow-md text-xs font-bold font-mono">
+              {t.remainingTiles}: <span className="text-cyan-300 font-black">{remainingTilesCount}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-2xl bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 text-white shadow-md">
+              <span className="text-xs font-black uppercase tracking-wider text-cyan-300">
+                {level === 1
+                  ? `${t.level} 1 (${t.levelEasy})`
+                  : level === 2
+                  ? `🔥 ${t.level} 2 (${t.levelHard})`
+                  : `⭐ ${t.level} 3 (${t.levelMaster})`}
+              </span>
+            </div>
+
+            <div className="px-3 py-1 rounded-2xl bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 text-white shadow-md text-xs font-bold font-mono">
+              {t.remainingTiles}: <span className="text-cyan-300 font-black">{remainingTilesCount}</span>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* 5. Center Main Playing Field (Stretches smoothly to fill the screen) */}
       <main className="relative z-10 flex-1 w-full max-w-4xl flex flex-col items-center justify-center my-auto min-h-[380px] px-2">
-        {/* Active Mascot (Poro, Cat, Piglet — Speaks "УМНИЦА МАШКА" in 15 languages!) */}
-        <div className="absolute top-0 right-4 sm:right-12 z-30">
+        {/* Cosmic Astronaut Poro (tells jokes every 3 matches!) */}
+        <div className="absolute top-0 right-4 sm:right-10 z-30">
           <CosmicPoro
-            mascot={activeMascot}
             isWorried={slot.length >= 6}
             isCheering={isPoroCheering}
-            praise={poroPraise}
-            onOpenMascotShop={() => setShowInventoryModal(true)}
+            jokeText={poroJoke}
+            lang={lang}
             onPoroClick={() => {
-              const useSpecial = complimentsRemaining > 0;
-              if (useSpecial) {
-                setComplimentsRemaining((prev) => {
-                  const next = Math.max(0, prev - 1);
-                  try { localStorage.setItem('tryparty_compliments_rem', String(next)); } catch {}
-                  return next;
-                });
-              }
-              const praise = speakMascotPraise(activeMascot, undefined, useSpecial);
-              setPoroPraise(praise);
-              if (poroPraiseTimerRef.current) clearTimeout(poroPraiseTimerRef.current);
-              poroPraiseTimerRef.current = window.setTimeout(() => setPoroPraise(null), 4500);
+              const jokes = t.poroJokes;
+              const joke = jokes[Math.floor(Math.random() * jokes.length)];
+              setPoroJoke(joke);
+              if (poroJokeTimerRef.current) clearTimeout(poroJokeTimerRef.current);
+              poroJokeTimerRef.current = window.setTimeout(() => setPoroJoke(null), 5000);
             }}
           />
         </div>
 
-        {/* Scalable Responsive Board Container */}
-        <div className="relative w-[340px] h-[360px] sm:w-[390px] sm:h-[400px] md:w-[430px] md:h-[440px] flex items-center justify-center transition-all duration-300">
+        {/* The Scalable Responsive Board Container */}
+        <div className="relative w-[340px] h-[360px] sm:w-[380px] sm:h-[390px] md:w-[420px] md:h-[430px] flex items-center justify-center transition-all duration-300">
           <div
             className="relative w-[340px] h-[360px] origin-center transition-transform duration-300"
             style={{
@@ -1034,7 +1081,6 @@ export default function App() {
                   tile={tile}
                   onClick={handleTileClick}
                   isHinted={isHinted}
-                  level={level}
                   style={{
                     left: `calc(50% + ${tile.x}px - 24px)`,
                     top: `calc(50% + ${tile.y}px - 28px)`,
@@ -1047,15 +1093,10 @@ export default function App() {
         </div>
       </main>
 
-      {/* 6. Bottom Controls: Shelf + Boosters + Stasis Tray */}
+      {/* 6. Bottom Control Section: Shelf + Boosters + Stasis Pod Tray */}
       <footer className="relative z-20 w-full max-w-2xl pb-4 px-3 flex flex-col items-center">
         {/* Extracted 3-Tile Reserve Shelf */}
-        <ReserveShelf
-          tiles={shelf}
-          onTileClick={handleShelfTileClick}
-          lang={lang}
-          level={level}
-        />
+        <ReserveShelf tiles={shelf} onTileClick={handleShelfTileClick} lang={lang} />
 
         {/* 4 Sci-Fi Boosters */}
         <BoosterBar
@@ -1070,32 +1111,15 @@ export default function App() {
         />
 
         {/* The 7-Slot Quantum Hextech Tray */}
-        <SlotTray
-          slots={slot}
-          matchingIds={matchingIds}
-          maxSlots={7}
-          lang={lang}
-          level={level}
-        />
+        <SlotTray slots={slot} matchingIds={matchingIds} maxSlots={7} lang={lang} />
       </footer>
 
-      {/* 💎 Gemstones, Coin Exchange & Mascots Shop Modal */}
+      {/* 💎 Gemstones Inventory Modal */}
       <InventoryModal
         isOpen={showInventoryModal}
         onClose={() => setShowInventoryModal(false)}
         inventory={gemInventory}
-        coins={coins}
-        activeMascot={activeMascot}
-        ownedMascots={ownedMascots}
-        complimentsRemaining={complimentsRemaining}
         lang={lang}
-        onExchangeGem={handleExchangeGem}
-        onExchangeDuplicates={handleExchangeDuplicates}
-        onBuyMascotWithCoins={handleBuyMascotWithCoins}
-        onBuyMascotWithHextech={handleBuyMascotWithHextech}
-        onSelectMascot={handleSelectMascot}
-        onBuyComplimentsWithCoins={handleBuyComplimentsWithCoins}
-        onBuyComplimentsWithHextech={handleBuyComplimentsWithHextech}
       />
 
       {/* 🎁 Daily Login Reward Modal */}
@@ -1107,53 +1131,47 @@ export default function App() {
         onClaim={handleClaimDailyReward}
       />
 
-      {/* 🚀 10 Levels Selector Modal */}
-      <LevelSelectModal
-        isOpen={showLevelSelect}
-        onClose={() => setShowLevelSelect(false)}
-        currentLevel={level}
-        unlockedLevel={unlockedLevel}
+      {/* Speedrun Leaderboard Modal */}
+      <LeaderboardModal
+        isOpen={showLeaderboard}
+        onClose={() => setShowLeaderboard(false)}
+        dayLabel={dayLabel}
+        userBestTime={userBestDailyTime}
+        dailyEntries={dailyLeaderboard}
         lang={lang}
-        onSelectLevel={(lvl) => setLevel(lvl)}
       />
 
-      {/* 📱 Mobile Packages & Stores Modal (.APK, .AAB, Solana Seeker) */}
-      <MobilePackagesModal
-        isOpen={showMobilePackagesModal}
-        onClose={() => setShowMobilePackagesModal(false)}
-        lang={lang}
-        onPwaInstall={installPwa}
-        isPwaInstallable={isPwaInstallable}
-      />
-
-      {/* 💔 Fail Modal (Warm support for Mashka + Progress Preserved) */}
+      {/* 💔 Fail Modal (Warm personalized support for Mashka) */}
       <FailModal
         isOpen={isGameOver}
         level={level}
         remainingTiles={remainingTilesCount}
         onRevive={handleRevive}
-        onRestart={() => startLevelGame(level)}
+        onRestart={startCurrentGame}
         hasRevive={hasRevive && slot.length > 0}
         lang={lang}
       />
 
-      {/* 🏆 Win Modal (Advance to Next Level + Praise for Mashka + Gem Drop) */}
+      {/* 🏆 Win Modal (Personalized praise for Mashka + Gem Drop) */}
       <WinModal
         isOpen={isVictory}
         level={level}
-        mode="campaign"
+        mode={mode}
         score={score}
+        completionTimeSeconds={dailyCompletionTime || timerSeconds}
+        isNewBest={isNewBest}
+        dailyRank={dailyRank}
         droppedGem={droppedGem}
         lang={lang}
-        onNextLevel={handleAdvanceToNextLevel}
-        onReplay={() => startLevelGame(level)}
+        onNextLevel={() => setLevel((prev) => (prev < 3 ? prev + 1 : 1))}
+        onReplay={startCurrentGame}
         onViewLeaderboard={() => {
           setIsVictory(false);
-          setShowLevelSelect(true);
+          setShowLeaderboard(true);
         }}
       />
 
-      {/* Welcome Banner */}
+      {/* Welcome & Sound Activation Modal */}
       <BrowserWelcomeBanner
         isOpen={showWelcomeBanner}
         onStartGame={handleStartFromBanner}
@@ -1161,7 +1179,7 @@ export default function App() {
         onToggleLang={handleToggleLang}
       />
 
-      {/* Help Modal */}
+      {/* Browser Controls & Rules Guide */}
       <BrowserHelpModal
         isOpen={showHelpModal}
         onClose={() => setShowHelpModal(false)}

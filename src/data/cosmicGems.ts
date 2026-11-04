@@ -16,7 +16,6 @@ export const COSMIC_GEMS: CosmicGem[] = [
     glowColor: 'rgba(16, 185, 129, 0.6)',
     shape: 'emerald',
     baseDropRate: 0.35,
-    coinValue: 20,
   },
   {
     id: 'bandle_topaz',
@@ -33,7 +32,6 @@ export const COSMIC_GEMS: CosmicGem[] = [
     glowColor: 'rgba(245, 158, 11, 0.6)',
     shape: 'hexagon',
     baseDropRate: 0.3,
-    coinValue: 25,
   },
   {
     id: 'star_ruby',
@@ -50,7 +48,6 @@ export const COSMIC_GEMS: CosmicGem[] = [
     glowColor: 'rgba(239, 68, 68, 0.6)',
     shape: 'diamond',
     baseDropRate: 0.18,
-    coinValue: 50,
   },
   {
     id: 'astral_sapphire',
@@ -67,7 +64,6 @@ export const COSMIC_GEMS: CosmicGem[] = [
     glowColor: 'rgba(59, 130, 246, 0.6)',
     shape: 'teardrop',
     baseDropRate: 0.15,
-    coinValue: 60,
   },
   {
     id: 'void_amethyst',
@@ -84,7 +80,6 @@ export const COSMIC_GEMS: CosmicGem[] = [
     glowColor: 'rgba(168, 85, 247, 0.7)',
     shape: 'crystal',
     baseDropRate: 0.1,
-    coinValue: 120,
   },
   {
     id: 'solar_amber',
@@ -101,7 +96,6 @@ export const COSMIC_GEMS: CosmicGem[] = [
     glowColor: 'rgba(234, 179, 8, 0.7)',
     shape: 'heart',
     baseDropRate: 0.08,
-    coinValue: 140,
   },
   {
     id: 'dragon_diamond',
@@ -118,7 +112,6 @@ export const COSMIC_GEMS: CosmicGem[] = [
     glowColor: 'rgba(6, 182, 212, 0.85)',
     shape: 'star',
     baseDropRate: 0.04,
-    coinValue: 280,
   },
   {
     id: 'starlight_opal',
@@ -135,32 +128,16 @@ export const COSMIC_GEMS: CosmicGem[] = [
     glowColor: 'rgba(236, 72, 153, 0.85)',
     shape: 'orb',
     baseDropRate: 0.02,
-    coinValue: 350,
-  },
-  {
-    id: 'hextech_arcane_crystal',
-    name: {
-      ru: 'Хекстек-Кристалл (Arcane)',
-      en: 'Hextech Crystal (Arcane)',
-    },
-    titleLore: {
-      ru: 'Самый редкий мифический кристалл из фильма Arcane! Сияет нестабильной чистой неоновой магией в латунном руническом гироскопе. Выпадает раз за 3 пройденных уровня!',
-      en: 'The rarest Mythic gem from the Arcane series! A sphere of pure pulsating raw arcane magic encased in runic brass stabilizer gimbal rings. Drops every 3 levels!',
-    },
-    rarity: 'mythic',
-    color: '#00f0ff',
-    glowColor: 'rgba(0, 240, 255, 0.95)',
-    shape: 'hextech',
-    baseDropRate: 0.0, // Guaranteed drop every 3 levels!
-    coinValue: 600,
   },
 ];
 
-export const HEXTECH_CRYSTAL = COSMIC_GEMS.find((g) => g.id === 'hextech_arcane_crystal')!;
-
 export function getRandomGemDrop(): CosmicGem {
   const rand = Math.random();
-  // Standard drops pool (Hextech crystal drops via 3-level streak milestone)
+  // Probability buckets:
+  // Legendary: 6%
+  // Epic: 18%
+  // Rare: 33%
+  // Common: 43%
   if (rand < 0.06) {
     const legendary = COSMIC_GEMS.filter((g) => g.rarity === 'legendary');
     return legendary[Math.floor(Math.random() * legendary.length)];

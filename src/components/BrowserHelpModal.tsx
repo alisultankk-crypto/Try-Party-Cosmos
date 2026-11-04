@@ -53,8 +53,8 @@ export const BrowserHelpModal: React.FC<BrowserHelpModalProps> = ({
                 {lang === 'ru' ? 'Цель игры:' : 'Goal:'}
               </span>{' '}
               {lang === 'ru'
-                ? 'Очистите всё поле, собирая тройки одинаковых предметов из DOORS с неоновой подсветкой!'
-                : 'Clear the board by matching 3 identical DOORS items with neon glow!'}
+                ? 'Очистите всё космическое поле, собирая тройки одинаковых чемпионов!'
+                : 'Clear the cosmic board by matching 3 identical champions!'}
             </div>
           </div>
 
