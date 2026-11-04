@@ -1,5 +1,5 @@
 /**
- * Level generator for the cosmic cat tile-matching campaign.
+ * Level generator for the cosmic tile-matching campaign.
  * Generates layered boards and ensures all tiles exist in triplets.
  * Includes deterministic Daily Challenge generator with 24-hour reset cycle.
  */
@@ -27,6 +27,7 @@ const ALL_TYPES: TileType[] = [
 ];
 
 export const MAX_CAMPAIGN_LEVEL = 1000;
+export const COSMIC_MAP_LEVEL = 25;
 
 interface TileBlueprint {
   x: number;
@@ -83,14 +84,13 @@ function stringToSeed(str: string): number {
 }
 
 /**
- * Generates one of 1,000 campaign boards. Difficulty grows gradually by adding
- * triplets and breeds, while each board stays within the playable arena.
+ * Generates one of 1,000 campaign boards with steadily increasing difficulty.
  */
 export function generateCampaignLevel(level: number): TileItemData[] {
   const safeLevel = Math.max(1, Math.min(MAX_CAMPAIGN_LEVEL, Math.floor(level)));
   const progress = (safeLevel - 1) / (MAX_CAMPAIGN_LEVEL - 1);
-  const totalTriplets = 7 + Math.ceil(53 * Math.pow(progress, 0.72));
-  const typeCount = Math.min(ALL_TYPES.length, totalTriplets, 4 + Math.floor((safeLevel - 1) / 90));
+  const totalTriplets = 7 + Math.ceil(68 * Math.pow(progress, 0.72));
+  const typeCount = Math.min(ALL_TYPES.length, totalTriplets, 4 + Math.floor((safeLevel - 1) / 60));
   const typesUsed = ALL_TYPES.slice(0, typeCount);
   const pool = Array.from({ length: totalTriplets }, (_, i) => typesUsed[i % typeCount])
     .flatMap((type) => [type, type, type]);
@@ -113,8 +113,24 @@ export function generateCampaignLevel(level: number): TileItemData[] {
     }
   }
 
-  const layout = safeLevel % 4;
+  const layout = safeLevel === COSMIC_MAP_LEVEL ? 4 : (safeLevel - 1) % 4;
   positions.sort((a, b) => {
+    if (layout === 4) {
+      const rocketRows = [
+        '...#...',
+        '..###..',
+        '.#####.',
+        '#######',
+        '...#...',
+        '...#...',
+      ];
+      const getRocketRank = (position: { x: number; y: number }) => {
+        const column = Math.round(position.x / 40 + (columns - 1) / 2);
+        const row = Math.round(position.y / 46 + (rows - 1) / 2);
+        return rocketRows[row][column] === '#' ? 0 : 1;
+      };
+      return getRocketRank(a) - getRocketRank(b) || a.y - b.y || a.x - b.x;
+    }
     if (layout === 0) {
       return Math.hypot(a.x, a.y) - Math.hypot(b.x, b.y);
     }

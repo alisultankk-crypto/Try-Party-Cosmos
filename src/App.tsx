@@ -41,6 +41,7 @@ import {
 import {
   generateCampaignLevel,
   MAX_CAMPAIGN_LEVEL,
+  COSMIC_MAP_LEVEL,
   generateDailyChallenge,
   updateCoveredState,
   getTodayDateString,
@@ -48,12 +49,13 @@ import {
   createPRNG,
 } from './game/levelGenerator';
 import { TileItem } from './components/TileItem';
+import { CosmicMapArtwork } from './components/CosmicMapArtwork';
 import { SlotTray } from './components/SlotTray';
 import { BoosterBar } from './components/BoosterBar';
 import { ReserveShelf } from './components/ReserveShelf';
 import { CosmicBackground } from './components/CosmicBackground';
 import { MagicVfxOverlay, MagicBurstTrigger } from './components/MagicVfxOverlay';
-import { CAT_METAS } from './components/CosmicCats';
+import { CHAMPION_METAS } from './components/FunnyCosmicChamps';
 import { ScoreDisplay, ScoreFloater } from './components/ScoreDisplay';
 import { DailyTimer } from './components/DailyTimer';
 import { LeaderboardModal } from './components/LeaderboardModal';
@@ -402,7 +404,7 @@ export default function App() {
       setShowWelcomeBanner(false);
     }
 
-    puzzleSounds.playCatMeow(clickedTile.type);
+    puzzleSounds.playTileTap();
 
     setHistory((prev) => [
       ...prev,
@@ -433,7 +435,7 @@ export default function App() {
   const handleShelfTileClick = (shelfTile: TileItemData) => {
     if (slot.length >= 7 || isGameOver || isVictory || matchingIds.length > 0) return;
 
-    puzzleSounds.playCatMeow(shelfTile.type);
+    puzzleSounds.playTileTap();
     const newShelf = shelf.filter((t) => t.id !== shelfTile.id);
     setShelf(newShelf);
 
@@ -468,8 +470,8 @@ export default function App() {
         const matchIds = matchingTiles.map((t) => t.id);
         setMatchingIds(matchIds);
 
-        const catMeta = CAT_METAS[type];
-        const magicType: MagicEffectType = catMeta.magic;
+        const championMeta = CHAMPION_METAS[type];
+        const magicType: MagicEffectType = championMeta.magic;
         const currentCombo = comboRef.current;
         const earnedPoints = 300 * currentCombo;
 
@@ -515,7 +517,7 @@ export default function App() {
         setMagicBurst({
           id: `${Date.now()}_${Math.random()}`,
           type: magicType,
-          color: catMeta.accentColor,
+          color: championMeta.accentColor,
           x: burstX,
           y: burstY,
         });
@@ -862,6 +864,14 @@ export default function App() {
   ).length;
 
   const totalGemsCount = Object.values(gemInventory).reduce((acc, c) => acc + c, 0);
+  const campaignDifficulty =
+    level <= 100
+      ? t.levelEasy
+      : level <= 350
+        ? t.levelNormal
+        : level <= 700
+          ? t.levelHard
+          : t.levelMaster;
 
   return (
     <div className="relative min-h-[100dvh] w-full bg-[#030712] text-slate-100 flex flex-col justify-between items-center overflow-x-hidden select-none font-sans">
@@ -1056,6 +1066,9 @@ export default function App() {
               <span className="text-xs font-black uppercase tracking-wider text-cyan-300">
                 {t.level} {level} / {MAX_CAMPAIGN_LEVEL}
               </span>
+              <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-200">
+                {campaignDifficulty}
+              </span>
             </div>
 
             <div className="px-3 py-1 rounded-2xl bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 text-white shadow-md text-xs font-bold font-mono">
@@ -1075,6 +1088,14 @@ export default function App() {
               transform: `scale(${boardScale})`,
             }}
           >
+            {mode === 'campaign' && level === COSMIC_MAP_LEVEL && (
+              <>
+                <CosmicMapArtwork />
+                <div className="absolute top-2 left-1/2 z-10 -translate-x-1/2 rounded-full border border-cyan-300/50 bg-slate-950/85 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-cyan-200 shadow-lg">
+                  {lang === 'ru' ? 'Новая карта: Космодром' : 'New map: Spaceport'}
+                </div>
+              </>
+            )}
             {tiles.map((tile) => {
               if (tile.isEliminated || tile.inSlot || tile.inShelf) return null;
 

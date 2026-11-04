@@ -16,6 +16,7 @@ export interface Translations {
   dailyMode: string;
   level: string;
   levelEasy: string;
+  levelNormal: string;
   levelHard: string;
   levelMaster: string;
   remainingTiles: string;
@@ -84,7 +85,7 @@ export interface Translations {
 export const TRANSLATIONS: Record<Language, Translations> = {
   ru: {
     gameTitle: 'Try Party: COSMOS',
-    gameTagline: 'Космическая головоломка 3-в-ряд с котиками разных пород',
+    gameTagline: 'Космическая головоломка 3-в-ряд с героями',
     dailyRewardBtn: 'Ежедневная награда',
     inventoryBtn: 'Инвентарь камней',
     rulesBtn: 'Справка & Клавиши',
@@ -98,6 +99,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     dailyMode: 'Челлендж дня',
     level: 'Уровень',
     levelEasy: 'Разминка',
+    levelNormal: 'Сложный',
     levelHard: 'Космический хардкор',
     levelMaster: 'Мастер Бездны',
     remainingTiles: 'Осталось собрать',
@@ -154,7 +156,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     mashkaComforts: [
       'Не расстраивайся, Машка! В космосе бывают черные дыры, в следующий раз точно разнесешь! 💖',
       'Машка, ты была в одном шаге от триумфа! Встряхнись и давай еще разок! ✨',
-      'Не вешай нос, Машка! Даже кошки иногда выбирают не ту карточку. Ты сможешь! 🚀',
+      'Не вешай нос, Машка! Даже герои иногда выбирают не ту карточку. Ты сможешь! 🚀',
       'Мы верим в тебя, Машка! Попробуй снова — у тебя получится! ✨',
       'Машка, это была просто коварная гравитация! Жми рестарт и покажи им класс! 🌈',
     ],
@@ -178,6 +180,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     dailyMode: 'Daily Run',
     level: 'Level',
     levelEasy: 'Warmup',
+    levelNormal: 'Challenging',
     levelHard: 'Cosmic Hardcore',
     levelMaster: 'Void Master',
     remainingTiles: 'Remaining',

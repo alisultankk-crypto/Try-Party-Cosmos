@@ -1,6 +1,6 @@
 import React from 'react';
 import { TileItemData } from '../types/game';
-import { CAT_METAS, CosmicCats } from './CosmicCats';
+import { CHAMPION_METAS, FunnyCosmicChamps } from './FunnyCosmicChamps';
 
 interface TileItemProps {
   tile: TileItemData;
@@ -18,7 +18,7 @@ export const TileItem: React.FC<TileItemProps> = ({
   isHinted = false,
 }) => {
   const isClickable = !tile.isCovered && !tile.inSlot && !tile.inShelf;
-  const meta = CAT_METAS[tile.type];
+  const meta = CHAMPION_METAS[tile.type];
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -59,13 +59,13 @@ export const TileItem: React.FC<TileItemProps> = ({
         <div className="absolute top-1 left-1 w-1 h-1 rounded-full bg-white/40" />
         <div className="absolute top-1 right-1 w-1 h-1 rounded-full bg-white/40" />
 
-        {/* Breed-specific cat portrait and elemental mark */}
+        {/* Previous cosmic champion illustration */}
         <div
           className={`transform transition-transform ${
             isClickable ? 'scale-100' : 'scale-95'
           }`}
         >
-          <CosmicCats type={tile.type} isCovered={tile.isCovered} />
+          <FunnyCosmicChamps type={tile.type} isCovered={tile.isCovered} />
         </div>
 
         {/* Dimming Layer when covered by higher tiles */}

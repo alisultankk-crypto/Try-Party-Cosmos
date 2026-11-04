@@ -1,6 +1,6 @@
 import React from 'react';
 import { Keyboard, Maximize2, Minimize2, Music, Sparkles, Award, Gem, Gift } from 'lucide-react';
-import { CAT_METAS } from './CosmicCats';
+import { CHAMPION_METAS } from './FunnyCosmicChamps';
 import { Language } from '../types/game';
 import { TRANSLATIONS } from '../i18n/translations';
 
@@ -142,12 +142,12 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
 
       {/* Right Desktop Panel (Hidden on small screens, visible on 2xl+) */}
       <aside className="hidden 2xl:flex flex-col gap-3 w-64 fixed right-4 top-4 bottom-4 z-20 pointer-events-auto overflow-y-auto">
-        {/* Cat breeds and elemental effects */}
+        {/* Champions and elemental effects */}
         <div className="p-4 rounded-3xl bg-slate-900/90 backdrop-blur-md border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.2)] flex flex-col gap-2.5">
           <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-cyan-300">
             <span className="flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              {lang === 'ru' ? 'Породы и стихии' : 'Breeds & Elements'}
+              {lang === 'ru' ? 'Персонажи и стихии' : 'Champions & Elements'}
             </span>
             {combo > 1 && (
               <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 font-black text-[10px] animate-pulse">
@@ -157,7 +157,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           </div>
 
           <div className="space-y-1.5 text-[11px] max-h-72 overflow-y-auto pr-1">
-            {Object.entries(CAT_METAS).map(([key, meta]) => (
+            {Object.entries(CHAMPION_METAS).map(([key, meta]) => (
               <div
                 key={key}
                 className="flex items-center justify-between p-1.5 rounded-xl bg-slate-950/60 border border-slate-800/80"
