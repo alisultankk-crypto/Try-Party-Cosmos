@@ -71,7 +71,7 @@ export interface DailyChallengeInfo {
 // 💎 ДРАГОЦЕННЫЕ КАМНИ И ИНВЕНТАРЬ
 // ==========================================
 
-export type GemRarity = 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
+export type GemRarity = 'common' | 'rare' | 'epic' | 'legendary';
 
 export interface CosmicGem {
   id: string;
@@ -80,9 +80,8 @@ export interface CosmicGem {
   rarity: GemRarity;
   color: string;
   glowColor: string;
-  shape: 'diamond' | 'hexagon' | 'star' | 'emerald' | 'crystal' | 'heart' | 'teardrop' | 'orb' | 'hextech';
+  shape: 'diamond' | 'hexagon' | 'star' | 'emerald' | 'crystal' | 'heart' | 'teardrop' | 'orb';
   baseDropRate: number; // 0 to 1
-  coinValue: number; // Gold coins obtained when exchanging
 }
 
 export type GemInventory = Record<string, number>;
@@ -91,22 +90,4 @@ export interface DailyLoginState {
   lastClaimDate: string; // YYYY-MM-DD
   streak: number; // 1 to 7
   hasClaimedToday: boolean;
-}
-
-// ==========================================
-// 🐾 ЗВЕРЯТА-КОМПАНЬОНЫ (ПОРО, КОШЕЧКА, ПОРОСЕНОК)
-// ==========================================
-
-export type MascotId = 'poro' | 'cat' | 'piglet';
-
-export interface MascotInfo {
-  id: MascotId;
-  name: { ru: string; en: string };
-  species: { ru: string; en: string };
-  avatarEmoji: string;
-  soundType: 'squeak' | 'meow' | 'oink';
-  coinCost: number;
-  hextechCost: number;
-  description: { ru: string; en: string };
-  praisePrefix: { ru: string; en: string };
 }
