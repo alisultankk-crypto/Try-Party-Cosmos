@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Keyboard, Sparkles, Gem, Trophy } from 'lucide-react';
-import { CAT_METAS, CosmicCats } from './CosmicCats';
+import { CHAMPION_METAS, FunnyCosmicChamps } from './FunnyCosmicChamps';
 import { Language, TileType } from '../types/game';
 import { TRANSLATIONS } from '../i18n/translations';
 
@@ -53,24 +53,24 @@ export const BrowserHelpModal: React.FC<BrowserHelpModalProps> = ({
                 {lang === 'ru' ? 'Цель игры:' : 'Goal:'}
               </span>{' '}
               {lang === 'ru'
-                ? 'Очистите всё поле, собирая тройки одинаковых котиков!'
-                : 'Clear the board by matching 3 identical cats!'}
+                ? 'Очистите всё поле, собирая тройки одинаковых персонажей!'
+                : 'Clear the board by matching 3 identical champions!'}
             </div>
           </div>
 
           <div className="rounded-2xl border border-violet-500/20 bg-slate-950/60 p-3">
             <div className="mb-2 text-xs font-bold text-violet-300">
-              {lang === 'ru' ? '14 пород, окрасов и стихий — у каждой своё мяуканье' : '14 breeds, coats, and elements—each with its own meow'}
+              {lang === 'ru' ? '14 космических персонажей и стихийных эффектов' : '14 cosmic champions and elemental effects'}
             </div>
             <div className="grid grid-cols-7 gap-1.5">
-              {(Object.keys(CAT_METAS) as TileType[]).map((type) => (
+              {(Object.keys(CHAMPION_METAS) as TileType[]).map((type) => (
                 <div
                   key={type}
                   className="flex aspect-square items-center justify-center rounded-lg border border-slate-700"
-                  style={{ backgroundColor: `color-mix(in srgb, ${CAT_METAS[type].accentColor} 35%, #111827)` }}
-                  title={`${CAT_METAS[type].name}: ${CAT_METAS[type].funnyName}`}
+                  style={{ backgroundColor: `color-mix(in srgb, ${CHAMPION_METAS[type].accentColor} 35%, #111827)` }}
+                  title={`${CHAMPION_METAS[type].name}: ${CHAMPION_METAS[type].funnyName}`}
                 >
-                  <CosmicCats type={type} />
+                  <FunnyCosmicChamps type={type} />
                 </div>
               ))}
             </div>
