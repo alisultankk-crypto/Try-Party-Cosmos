@@ -183,6 +183,63 @@ export const CosmicGemSvg: React.FC<CosmicGemSvgProps> = ({
           <circle cx="21" cy="20" r="2" fill="#ffffff" />
         </g>
       )}
+
+      {shape === 'hextech' && (
+        <g>
+          {/* ⚡ HEXTECH CRYSTAL FROM ARCANE: Runic Golden Stabilizers + Pulsating Raw Blue Arcane Core */}
+          {/* Outer glowing arcane aura */}
+          <circle cx="32" cy="32" r="29" fill="#00f0ff" opacity="0.18" />
+          
+          {/* Outer Brass Gyroscopic Stabilizer Ring */}
+          <circle cx="32" cy="32" r="26" fill="none" stroke="#ca8a04" strokeWidth="3" />
+          <circle cx="32" cy="32" r="26" fill="none" stroke="#facc15" strokeWidth="1.8" />
+          
+          {/* Runic clamp brackets (Jayce & Viktor's stabilization cage) */}
+          <rect x="30" y="3" width="4" height="6" rx="1" fill="#facc15" stroke="#78350f" strokeWidth="0.8" />
+          <rect x="30" y="55" width="4" height="6" rx="1" fill="#facc15" stroke="#78350f" strokeWidth="0.8" />
+          <rect x="3" y="30" width="6" height="4" rx="1" fill="#facc15" stroke="#78350f" strokeWidth="0.8" />
+          <rect x="55" y="30" width="6" height="4" rx="1" fill="#facc15" stroke="#78350f" strokeWidth="0.8" />
+
+          {/* Angled Gimbal Runic Ring */}
+          <ellipse
+            cx="32"
+            cy="32"
+            rx="23"
+            ry="11"
+            transform="rotate(-35 32 32)"
+            fill="none"
+            stroke="#f59e0b"
+            strokeWidth="1.8"
+            strokeDasharray="6 2 2 2"
+          />
+
+          {/* Pure Blue Hextech Arcane Sphere Core */}
+          <circle cx="32" cy="32" r="16" fill={`url(#glow-${gem.id})`} stroke="#00f0ff" strokeWidth="2" />
+
+          {/* Hexagonal Inner Facets */}
+          <polygon
+            points="32,19 43,25 43,39 32,45 21,39 21,25"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="1.2"
+            strokeOpacity="0.8"
+          />
+
+          {/* Arcane Lightning Filaments */}
+          <path d="M23,28 L30,32 L26,36 L34,34 L38,26" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M28,24 L32,30 L39,36" fill="none" stroke="#7dd3fc" strokeWidth="1.2" strokeLinecap="round" />
+
+          {/* Super-bright White Core Nucleus */}
+          <circle cx="32" cy="32" r="5" fill="#ffffff" />
+          <circle cx="32" cy="32" r="2.5" fill="#e0f2fe" />
+
+          {/* Arcane Sparkles */}
+          <circle cx="16" cy="16" r="1.5" fill="#00f0ff" />
+          <circle cx="48" cy="18" r="1.5" fill="#facc15" />
+          <circle cx="46" cy="46" r="1.8" fill="#00f0ff" />
+          <circle cx="18" cy="48" r="1.2" fill="#38bdf8" />
+        </g>
+      )}
     </svg>
   );
 };

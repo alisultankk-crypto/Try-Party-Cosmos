@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "Try Party: COSMOS",
+  "short_name": "TryParty",
+  "description": "Космическая игра-головоломка три-в-ряд с героями, коллекцией драгоценных камней и дабстеп музыкой!",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#020617",
+  "background_color": "#020617",
+  "categories": ["games", "puzzle"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

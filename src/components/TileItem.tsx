@@ -8,6 +8,7 @@ interface TileItemProps {
   style?: React.CSSProperties;
   className?: string;
   isHinted?: boolean;
+  level?: number;
 }
 
 export const TileItem: React.FC<TileItemProps> = ({
@@ -18,7 +19,13 @@ export const TileItem: React.FC<TileItemProps> = ({
   isHinted = false,
 }) => {
   const isClickable = !tile.isCovered && !tile.inSlot && !tile.inShelf;
-  const meta = CHAMPION_METAS[tile.type] || { accentColor: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.5)' };
+  const meta = CHAMPION_METAS[tile.type] || {
+    accentColor: '#00f0ff',
+    glowColor: 'rgba(0, 240, 255, 0.5)',
+    neonColor: '#00f0ff',
+    neonGlow: 'rgba(0, 240, 255, 0.8)',
+    category: 'Предмет',
+  };
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -33,29 +40,47 @@ export const TileItem: React.FC<TileItemProps> = ({
       style={style}
       className={`absolute w-12 h-14 rounded-xl transition-all duration-150 select-none ${
         isClickable
-          ? 'cursor-pointer hover:-translate-y-1 active:translate-y-0 active:scale-95 z-20'
+          ? 'cursor-pointer hover:-translate-y-1.5 active:translate-y-0 active:scale-95 z-20'
           : 'cursor-not-allowed pointer-events-none'
       } ${className}`}
     >
-      {/* 3D Cosmic Hextech Tile Chassis */}
+      {/* Whitish-Gray Ceramic Card with Category Neon Glow Outline */}
       <div
         className={`relative w-full h-full rounded-xl flex items-center justify-center border-2 transition-all duration-200 ${
           isClickable
             ? isHinted
-              ? 'bg-gradient-to-b from-purple-900 to-indigo-950 border-yellow-300 shadow-[0_0_20px_rgba(250,204,21,0.9)] ring-2 ring-yellow-400 animate-pulse'
-              : 'bg-gradient-to-b from-[#1e1b4b] via-[#111827] to-[#030712] border-[#38bdf8]/50 shadow-[0_4px_0_#0f172a,0_8px_16px_rgba(56,189,248,0.25)] hover:border-[#38bdf8] hover:shadow-[0_4px_0_#0f172a,0_10px_22px_rgba(56,189,248,0.45)]'
-            : 'bg-gradient-to-b from-[#0f172a] to-[#020617] border-[#1e293b] shadow-[0_3px_0_#020617]'
+              ? 'bg-gradient-to-b from-amber-50 via-white to-yellow-100 ring-4 ring-yellow-400 animate-pulse'
+              : 'bg-gradient-to-b from-[#ffffff] via-[#f1f5f9] to-[#e2e8f0] hover:brightness-105'
+            : 'bg-gradient-to-b from-[#f8fafc] via-[#e2e8f0] to-[#cbd5e1] border-slate-600/50'
         }`}
         style={{
-          borderColor: isClickable && !isHinted ? meta.accentColor + '88' : undefined,
-          boxShadow: isClickable && !isHinted ? `0 4px 0 #030712, 0 6px 14px ${meta.glowColor}` : undefined,
+          borderColor: isClickable
+            ? isHinted
+              ? '#facc15'
+              : meta.neonColor
+            : 'rgba(100, 116, 139, 0.4)',
+          boxShadow: isClickable
+            ? isHinted
+              ? '0 0 24px rgba(250, 204, 21, 1), 0 4px 0 #ca8a04'
+              : `0 0 16px ${meta.neonGlow}, 0 4px 0 #94a3b8, 0 6px 14px rgba(0,0,0,0.35)`
+            : '0 2px 0 #475569',
         }}
       >
-        {/* Subtle Tech Grid Corner Accents */}
-        <div className="absolute top-1 left-1 w-1 h-1 rounded-full bg-white/40" />
-        <div className="absolute top-1 right-1 w-1 h-1 rounded-full bg-white/40" />
+        {/* Subtle Ceramic Bevel Specular Highlights */}
+        <div className="absolute top-1 left-1.5 right-1.5 h-1 rounded-full bg-white/80 pointer-events-none" />
 
-        {/* Funny League of Legends Cosmic Champion Illustration */}
+        {/* Category Neon Indicator Dot at Top Right */}
+        {isClickable && (
+          <div
+            className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full pointer-events-none transition-all"
+            style={{
+              backgroundColor: meta.neonColor,
+              boxShadow: `0 0 6px ${meta.neonGlow}`,
+            }}
+          />
+        )}
+
+        {/* DOORS Item Artwork */}
         <div
           className={`transform transition-transform ${
             isClickable ? 'scale-100' : 'scale-95'
@@ -66,7 +91,10 @@ export const TileItem: React.FC<TileItemProps> = ({
 
         {/* Dimming Layer when covered by higher tiles */}
         {tile.isCovered && (
-          <div className="absolute inset-0 rounded-xl bg-slate-950/70 backdrop-blur-[0.5px]" />
+          <div className="absolute inset-0 rounded-xl bg-slate-950/65 backdrop-blur-[0.5px] flex items-center justify-center">
+            {/* Soft locked overlay */}
+            <div className="w-1.5 h-1.5 rounded-full bg-slate-400/40" />
+          </div>
         )}
       </div>
     </div>

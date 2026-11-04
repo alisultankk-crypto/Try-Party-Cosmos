@@ -1,7 +1,9 @@
 /**
- * Level Generator for Triple Tile Cattle (Sheep a Sheep / 羊了个羊).
- * Generates layered tile pyramids, blind side stacks, and ensures all tiles exist in triplets.
- * Includes deterministic Daily Challenge generator with 24-hour reset cycle.
+ * Progressive 10-Level Board Generator for Try Party: COSMOS.
+ * - Starts with only 3 types of champions on Level 1 (clear, fun, accessible).
+ * - Gradually introduces new champion cards with each level up to Level 10.
+ * - Guarantees 100% triplet integrity (all tiles exist in groups of 3).
+ * - Generates distinct tactical pyramid stacks and layered structures.
  */
 
 import { TileType, TileItemData } from '../types/game';
@@ -9,21 +11,20 @@ import { TileType, TileItemData } from '../types/game';
 export const TILE_WIDTH = 48;
 export const TILE_HEIGHT = 56;
 
-const ALL_TYPES: TileType[] = [
-  'yasuo',
-  'ahri',
-  'jinx',
-  'teemo',
-  'garen',
-  'zed',
-  'blitzcrank',
-  'vi',
-  'ashe',
-  'darius',
-  'asol',
-  'lux',
-  'heimer',
-  'katarina',
+// Ordered champion unlock list across 10 levels
+export const PROGRESSIVE_CHAMPION_ORDER: TileType[] = [
+  'yasuo',      // Level 1
+  'ahri',       // Level 1
+  'jinx',       // Level 1
+  'teemo',      // Level 2 (+1)
+  'lux',        // Level 3 (+1)
+  'blitzcrank', // Level 4 (+1)
+  'vi',         // Level 5 (+1)
+  'ashe',       // Level 6 (+1)
+  'darius',     // Level 7 (+1)
+  'zed',        // Level 8 (+1)
+  'garen',      // Level 9 (+1)
+  'asol',       // Level 10 (+1)
 ];
 
 interface TileBlueprint {
@@ -32,9 +33,6 @@ interface TileBlueprint {
   layer: number;
 }
 
-/**
- * Seeded PRNG (Mulberry32) for deterministic daily boards
- */
 export function createPRNG(seed: number) {
   return function () {
     let t = (seed += 0x6d2b79f5);
@@ -71,406 +69,292 @@ export function getMsUntilTomorrow(): number {
   return tomorrow.getTime() - now.getTime();
 }
 
-function stringToSeed(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
+function shuffleArray<T>(arr: T[], rng = Math.random): void {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return Math.abs(hash) || 123456789;
 }
 
 /**
- * Generates Level 1 (Tutorial):
- * 7 triplets (21 tiles) in 3 simple layers.
+ * Creates TileItemData array from coordinate blueprints and a shuffled pool of types.
  */
-export function generateLevel1(): TileItemData[] {
-  const typesUsed: TileType[] = ['yasuo', 'ahri', 'jinx', 'teemo'];
-  const totalTriplets = 7; // 21 tiles
-
-  const pool: TileType[] = [];
-  for (let i = 0; i < totalTriplets; i++) {
-    const t = typesUsed[i % typesUsed.length];
-    pool.push(t, t, t);
-  }
-  shuffleArray(pool);
-
-  const blueprints: TileBlueprint[] = [
-    // Layer 0 (Base 3x3)
-    { x: -50, y: -40, layer: 0 },
-    { x: 0,   y: -40, layer: 0 },
-    { x: 50,  y: -40, layer: 0 },
-    { x: -50, y: 15,  layer: 0 },
-    { x: 0,   y: 15,  layer: 0 },
-    { x: 50,  y: 15,  layer: 0 },
-    { x: -50, y: 70,  layer: 0 },
-    { x: 0,   y: 70,  layer: 0 },
-    { x: 50,  y: 70,  layer: 0 },
-
-    // Layer 1 (Offset 2x2 + sides)
-    { x: -25, y: -12, layer: 1 },
-    { x: 25,  y: -12, layer: 1 },
-    { x: -25, y: 42,  layer: 1 },
-    { x: 25,  y: 42,  layer: 1 },
-    { x: -80, y: 15,  layer: 1 },
-    { x: 80,  y: 15,  layer: 1 },
-
-    // Layer 2 (Center peak)
-    { x: 0,   y: 15,  layer: 2 },
-    { x: -35, y: 70,  layer: 2 },
-    { x: 35,  y: 70,  layer: 2 },
-    { x: -35, y: -40, layer: 2 },
-    { x: 35,  y: -40, layer: 2 },
-    { x: 0,   y: -12, layer: 3 },
-  ];
-
-  return createTilesFromBlueprints(blueprints, pool);
-}
-
-/**
- * Generates Level 2 (The Legendary Challenge):
- * 45 triplets (135 tiles)
- */
-export function generateLevel2(): TileItemData[] {
-  const typesUsed: TileType[] = ALL_TYPES.slice(0, 13);
-  const totalTriplets = 45; // 135 tiles total
-  const pool: TileType[] = [];
-
-  for (let i = 0; i < totalTriplets; i++) {
-    const t = typesUsed[i % typesUsed.length];
-    pool.push(t, t, t);
-  }
-  shuffleArray(pool);
-
-  const blueprints: TileBlueprint[] = [];
-
-  // Central Deep Pyramid (Layers 0 to 7)
-  for (let l = 0; l <= 7; l++) {
-    const span = Math.max(1, 4 - Math.floor(l / 2));
-    const offset = (l % 2 === 1) ? 14 : 0;
-    for (let r = 0; r < span; r++) {
-      for (let c = 0; c < span; c++) {
-        const x = (c - (span - 1) / 2) * (TILE_WIDTH - 6) + offset;
-        const y = (r - (span - 1) / 2) * (TILE_HEIGHT - 8) - 15 + offset;
-        blueprints.push({ x, y, layer: l });
-      }
-    }
-  }
-
-  // Left Draw-Stack (Long overlapping deck)
-  const leftStackCount = 20;
-  for (let i = 0; i < leftStackCount; i++) {
-    blueprints.push({
-      x: -125 - (i % 2) * 6,
-      y: -90 + i * 11,
-      layer: i + 10,
-    });
-  }
-
-  // Right Draw-Stack (Long overlapping deck)
-  const rightStackCount = 20;
-  for (let i = 0; i < rightStackCount; i++) {
-    blueprints.push({
-      x: 125 + (i % 2) * 6,
-      y: -90 + i * 11,
-      layer: i + 10,
-    });
-  }
-
-  // Bottom Support Columns
-  const bottomOffsets = [-60, -20, 20, 60];
-  bottomOffsets.forEach((bx) => {
-    for (let l = 0; l < 4; l++) {
-      blueprints.push({
-        x: bx + (l % 2) * 5,
-        y: 110 + (l % 2) * 4,
-        layer: l,
-      });
-    }
-  });
-
-  while (blueprints.length > pool.length) blueprints.pop();
-  while (blueprints.length < pool.length) {
-    const randomExisting = blueprints[Math.floor(Math.random() * blueprints.length)];
-    blueprints.push({
-      x: randomExisting.x + (Math.random() - 0.5) * 12,
-      y: randomExisting.y + (Math.random() - 0.5) * 12,
-      layer: randomExisting.layer + 1,
-    });
-  }
-
-  return createTilesFromBlueprints(blueprints, pool);
-}
-
-/**
- * Generates Level 3 (Grandmaster):
- * 51 triplets (153 tiles)
- */
-export function generateLevel3(): TileItemData[] {
-  const typesUsed: TileType[] = ALL_TYPES;
-  const totalTriplets = 51; // 153 tiles
-  const pool: TileType[] = [];
-
-  for (let i = 0; i < totalTriplets; i++) {
-    const t = typesUsed[i % typesUsed.length];
-    pool.push(t, t, t);
-  }
-  shuffleArray(pool);
-
-  const blueprints: TileBlueprint[] = [];
-
-  // Dual Tower Formations
-  [-65, 65].forEach((towerX) => {
-    for (let l = 0; l <= 6; l++) {
-      const size = Math.max(1, 3 - Math.floor(l / 2.5));
-      for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-          blueprints.push({
-            x: towerX + (c - (size - 1) / 2) * 40,
-            y: (r - (size - 1) / 2) * 44 - 10,
-            layer: l,
-          });
-        }
-      }
-    }
-  });
-
-  // Four corner decks
-  const corners = [
-    { x: -120, y: -70 },
-    { x: 120, y: -70 },
-    { x: -120, y: 70 },
-    { x: 120, y: 70 },
-  ];
-  corners.forEach((corn) => {
-    for (let i = 0; i < 12; i++) {
-      blueprints.push({
-        x: corn.x + (i % 2) * 4,
-        y: corn.y + i * 8,
-        layer: i + 10,
-      });
-    }
-  });
-
-  // Central connector bridge
-  for (let l = 0; l < 5; l++) {
-    blueprints.push(
-      { x: 0, y: -40, layer: l + 1 },
-      { x: 0, y: 0,   layer: l + 1 },
-      { x: 0, y: 40,  layer: l + 1 }
-    );
-  }
-
-  while (blueprints.length > pool.length) blueprints.pop();
-  while (blueprints.length < pool.length) {
-    const ref = blueprints[Math.floor(Math.random() * blueprints.length)];
-    blueprints.push({ x: ref.x + 8, y: ref.y + 8, layer: ref.layer + 1 });
-  }
-
-  return createTilesFromBlueprints(blueprints, pool);
-}
-
-/**
- * Generates the DAILY CHALLENGE:
- * A deterministic fixed board layout that automatically updates every 24 hours.
- * Uses the day's date string as a seed so every player in the world plays on the exact same layout!
- */
-export function generateDailyChallenge(dateStr?: string): {
-  tiles: TileItemData[];
-  dateString: string;
-  dayLabel: string;
-} {
-  const targetDate = dateStr || getTodayDateString();
-  const seed = stringToSeed(targetDate);
-  const prng = createPRNG(seed);
-
-  // 12 item types, 40 triplets = 120 tiles (balanced & competitive)
-  const typesUsed = ALL_TYPES.slice(0, 12);
-  const totalTriplets = 40;
-  const pool: TileType[] = [];
-
-  for (let i = 0; i < totalTriplets; i++) {
-    const t = typesUsed[i % typesUsed.length];
-    pool.push(t, t, t);
-  }
-
-  // Deterministic Fisher-Yates shuffle with PRNG
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(prng() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-
-  // Select 1 of 4 daily archetypes based on seed
-  const archetype = Math.floor(prng() * 4);
-  const blueprints: TileBlueprint[] = [];
-
-  if (archetype === 0) {
-    // Archetype 0: "Royal Clover" (Center 6-layer pyramid + 4 petal wings)
-    for (let l = 0; l < 6; l++) {
-      const size = Math.max(1, 4 - Math.floor(l / 1.8));
-      for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-          blueprints.push({
-            x: (c - (size - 1) / 2) * 38 + (l % 2 === 1 ? 12 : 0),
-            y: (r - (size - 1) / 2) * 44 - 15 + (l % 2 === 1 ? 12 : 0),
-            layer: l,
-          });
-        }
-      }
-    }
-    // 4 Petals
-    const offsets = [
-      { dx: -115, dy: 0 },
-      { dx: 115,  dy: 0 },
-      { dx: 0,    dy: -90 },
-      { dx: 0,    dy: 95 },
-    ];
-    offsets.forEach((off) => {
-      for (let i = 0; i < 14; i++) {
-        blueprints.push({
-          x: off.dx + (i % 2) * 6,
-          y: off.dy + (i % 3) * 12 - 15,
-          layer: i + 8,
-        });
-      }
-    });
-  } else if (archetype === 1) {
-    // Archetype 1: "Twin Mountains & Bridge"
-    [-75, 75].forEach((mX) => {
-      for (let l = 0; l < 6; l++) {
-        const size = Math.max(1, 3 - Math.floor(l / 2.2));
-        for (let r = 0; r < size; r++) {
-          for (let c = 0; c < size; c++) {
-            blueprints.push({
-              x: mX + (c - (size - 1) / 2) * 38,
-              y: (r - (size - 1) / 2) * 42 - 10,
-              layer: l,
-            });
-          }
-        }
-      }
-    });
-    // Bridge & wings
-    for (let i = 0; i < 22; i++) {
-      blueprints.push({
-        x: -120 + (i % 2) * 6,
-        y: -80 + i * 9,
-        layer: i + 8,
-      });
-      blueprints.push({
-        x: 120 + (i % 2) * 6,
-        y: -80 + i * 9,
-        layer: i + 8,
-      });
-    }
-  } else if (archetype === 2) {
-    // Archetype 2: "Sunburst Fortress"
-    for (let l = 0; l < 7; l++) {
-      blueprints.push(
-        { x: 0, y: -15, layer: l * 2 },
-        { x: -36, y: -15, layer: l * 2 + 1 },
-        { x: 36, y: -15, layer: l * 2 + 1 },
-        { x: 0, y: -55, layer: l * 2 + 1 },
-        { x: 0, y: 25, layer: l * 2 + 1 }
-      );
-    }
-    // Cross stacks
-    for (let i = 0; i < 18; i++) {
-      blueprints.push({ x: -110 - (i % 2) * 6, y: -60 + i * 11, layer: i + 5 });
-      blueprints.push({ x: 110 + (i % 2) * 6, y: -60 + i * 11, layer: i + 5 });
-      blueprints.push({ x: -40 + (i % 3) * 40, y: 105 + (i % 2) * 6, layer: i + 5 });
-    }
-  } else {
-    // Archetype 3: "Farm Labyrinth"
-    for (let r = 0; r < 4; r++) {
-      for (let c = 0; c < 4; c++) {
-        for (let l = 0; l < 3; l++) {
-          blueprints.push({
-            x: (c - 1.5) * 42 + (l % 2) * 8,
-            y: (r - 1.5) * 46 - 10 + (l % 2) * 8,
-            layer: l,
-          });
-        }
-      }
-    }
-    for (let i = 0; i < 20; i++) {
-      blueprints.push({ x: -125 + (i % 2) * 4, y: -80 + i * 10, layer: i + 8 });
-      blueprints.push({ x: 125 - (i % 2) * 4, y: -80 + i * 10, layer: i + 8 });
-    }
-  }
-
-  // Adjust blueprint count to pool size exactly
-  while (blueprints.length > pool.length) blueprints.pop();
-  while (blueprints.length < pool.length) {
-    const idx = Math.floor(prng() * blueprints.length);
-    const ref = blueprints[idx];
-    blueprints.push({
-      x: ref.x + Math.round((prng() - 0.5) * 16),
-      y: ref.y + Math.round((prng() - 0.5) * 16),
-      layer: ref.layer + 1,
-    });
-  }
-
-  const tiles = createTilesFromBlueprints(blueprints, pool, prng);
-  return {
-    tiles,
-    dateString: targetDate,
-    dayLabel: getFormattedDayLabel(targetDate),
-  };
-}
-
 function createTilesFromBlueprints(
   blueprints: TileBlueprint[],
-  pool: TileType[],
-  prng?: () => number
+  pool: TileType[]
 ): TileItemData[] {
-  const randFn = prng || Math.random;
-  const tiles: TileItemData[] = blueprints.map((bp, idx) => ({
-    id: `tile_${idx}_${Date.now()}_${Math.floor(randFn() * 100000)}`,
-    type: pool[idx],
-    layer: bp.layer,
-    x: Math.round(bp.x),
-    y: Math.round(bp.y),
-    isCovered: false,
-    inSlot: false,
-    inShelf: false,
-    isEliminated: false,
-  }));
+  const total = Math.min(blueprints.length, pool.length);
+  const tiles: TileItemData[] = [];
+
+  for (let i = 0; i < total; i++) {
+    tiles.push({
+      id: `tile_${i}_${Math.random().toString(36).substr(2, 6)}`,
+      type: pool[i],
+      x: blueprints[i].x,
+      y: blueprints[i].y,
+      layer: blueprints[i].layer,
+      isCovered: false,
+      inSlot: false,
+      inShelf: false,
+      isEliminated: false,
+    });
+  }
 
   updateCoveredState(tiles);
   return tiles;
 }
 
 /**
- * Updates `isCovered` for every tile on the board.
+ * Checks overlap: tile A is covered if another unpicked tile B has layer > A.layer
+ * and their bounding boxes overlap by more than 8 pixels.
  */
-export function updateCoveredState(tiles: TileItemData[]) {
-  const activeTiles = tiles.filter((t) => !t.inSlot && !t.inShelf && !t.isEliminated);
+export function updateCoveredState(tiles: TileItemData[]): void {
+  const active = tiles.filter((t) => !t.inSlot && !t.inShelf && !t.isEliminated);
 
-  for (const t of activeTiles) {
-    t.isCovered = false;
-  }
-
-  const w = TILE_WIDTH - 6;
-  const h = TILE_HEIGHT - 6;
-
-  for (let i = 0; i < activeTiles.length; i++) {
-    const lower = activeTiles[i];
-    for (let j = 0; j < activeTiles.length; j++) {
-      const upper = activeTiles[j];
-      if (upper.layer > lower.layer) {
-        if (Math.abs(upper.x - lower.x) < w && Math.abs(upper.y - lower.y) < h) {
-          lower.isCovered = true;
+  for (const t of active) {
+    let covered = false;
+    for (const other of active) {
+      if (other.id === t.id) continue;
+      if (other.layer > t.layer) {
+        const dx = Math.abs(other.x - t.x);
+        const dy = Math.abs(other.y - t.y);
+        // Overlap threshold
+        if (dx < TILE_WIDTH - 8 && dy < TILE_HEIGHT - 8) {
+          covered = true;
           break;
         }
       }
     }
+    t.isCovered = covered;
   }
 }
 
-function shuffleArray<T>(arr: T[]) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+/**
+ * Universal Progressive Level Generator (Levels 1 to 10)
+ */
+export function generateLevel(levelNum: number): TileItemData[] {
+  const lvl = Math.max(1, Math.min(10, Math.floor(levelNum)));
+
+  // 1. Number of champion types used in this level
+  // Level 1 has 3 types, Level 2 has 4, ..., Level 10 has 12 types
+  const typesCount = Math.min(PROGRESSIVE_CHAMPION_ORDER.length, 2 + lvl);
+  const typesUsed = PROGRESSIVE_CHAMPION_ORDER.slice(0, typesCount);
+
+  // 2. Total triplets:
+  // Level 1: 6 triplets = 18 tiles
+  // Level 2: 8 triplets = 24 tiles
+  // Level 3: 11 triplets = 33 tiles
+  // Level 4: 14 triplets = 42 tiles
+  // Level 5: 17 triplets = 51 tiles
+  // Level 6: 20 triplets = 60 tiles
+  // Level 7: 23 triplets = 69 tiles
+  // Level 8: 26 triplets = 78 tiles
+  // Level 9: 30 triplets = 90 tiles
+  // Level 10: 35 triplets = 105 tiles
+  const tripletsMap: Record<number, number> = {
+    1: 6,
+    2: 8,
+    3: 11,
+    4: 14,
+    5: 17,
+    6: 20,
+    7: 23,
+    8: 26,
+    9: 30,
+    10: 35,
+  };
+  const totalTriplets = tripletsMap[lvl] || 6;
+  const totalTiles = totalTriplets * 3;
+
+  // 3. Populate pool ensuring all tiles are in triplets
+  const pool: TileType[] = [];
+  for (let i = 0; i < totalTriplets; i++) {
+    const type = typesUsed[i % typesUsed.length];
+    pool.push(type, type, type);
   }
+  shuffleArray(pool);
+
+  // 4. Generate layered layouts based on level complexity
+  const blueprints: TileBlueprint[] = [];
+
+  if (lvl === 1) {
+    // 18 tiles: 3 simple distinct layers
+    // Base 3x3 (9 tiles)
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        blueprints.push({
+          x: (c - 1) * (TILE_WIDTH + 4),
+          y: (r - 1) * (TILE_HEIGHT + 4) - 10,
+          layer: 0,
+        });
+      }
+    }
+    // Layer 1: 2x2 offset (4 tiles)
+    for (let r = 0; r < 2; r++) {
+      for (let c = 0; c < 2; c++) {
+        blueprints.push({
+          x: (c - 0.5) * (TILE_WIDTH + 2),
+          y: (r - 0.5) * (TILE_HEIGHT + 2) - 10,
+          layer: 1,
+        });
+      }
+    }
+    // Layer 2: 2 Side tiles + Center peak (5 tiles)
+    blueprints.push({ x: -110, y: -10, layer: 1 });
+    blueprints.push({ x: 110, y: -10, layer: 1 });
+    blueprints.push({ x: 0, y: -10, layer: 2 });
+    blueprints.push({ x: -28, y: -10, layer: 2 });
+    blueprints.push({ x: 28, y: -10, layer: 2 });
+  } else if (lvl === 2) {
+    // 24 tiles: Pyramid + Side columns
+    // Base (12 tiles)
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 4; c++) {
+        blueprints.push({
+          x: (c - 1.5) * (TILE_WIDTH + 2),
+          y: (r - 1) * (TILE_HEIGHT + 4) - 15,
+          layer: 0,
+        });
+      }
+    }
+    // Layer 1: 3x2 (6 tiles)
+    for (let r = 0; r < 2; r++) {
+      for (let c = 0; c < 3; c++) {
+        blueprints.push({
+          x: (c - 1) * (TILE_WIDTH + 2),
+          y: (r - 0.5) * (TILE_HEIGHT + 2) - 15,
+          layer: 1,
+        });
+      }
+    }
+    // Layer 2 & 3: 6 tiles (Side columns & Center)
+    blueprints.push({ x: -115, y: -45, layer: 2 });
+    blueprints.push({ x: -115, y: 15, layer: 3 });
+    blueprints.push({ x: 115, y: -45, layer: 2 });
+    blueprints.push({ x: 115, y: 15, layer: 3 });
+    blueprints.push({ x: -22, y: -15, layer: 2 });
+    blueprints.push({ x: 22, y: -15, layer: 2 });
+  } else {
+    // Levels 3 to 10: Multi-layer concentric pyramids with progressive draw decks
+    const maxLayers = Math.min(8, 3 + Math.floor(lvl / 2));
+    let tilesPlaced = 0;
+
+    // Center layered pyramid
+    for (let l = 0; l < maxLayers && tilesPlaced < totalTiles - 12; l++) {
+      const span = Math.max(2, Math.min(4, 5 - Math.floor(l / 2)));
+      const offset = (l % 2 === 1) ? 12 : 0;
+      for (let r = 0; r < span && tilesPlaced < totalTiles - 12; r++) {
+        for (let c = 0; c < span && tilesPlaced < totalTiles - 12; c++) {
+          blueprints.push({
+            x: (c - (span - 1) / 2) * (TILE_WIDTH - 2) + offset,
+            y: (r - (span - 1) / 2) * (TILE_HEIGHT - 4) - 20 + offset,
+            layer: l,
+          });
+          tilesPlaced++;
+        }
+      }
+    }
+
+    // Left and Right Tactical Decks
+    const remaining = totalTiles - tilesPlaced;
+    const halfRemaining = Math.floor(remaining / 2);
+
+    for (let i = 0; i < halfRemaining; i++) {
+      blueprints.push({
+        x: -118 - (i % 2) * 8,
+        y: -75 + (i * 12) % 150,
+        layer: 2 + i,
+      });
+      tilesPlaced++;
+    }
+
+    while (tilesPlaced < totalTiles) {
+      const i = totalTiles - tilesPlaced;
+      blueprints.push({
+        x: 118 + (i % 2) * 8,
+        y: -75 + (i * 12) % 150,
+        layer: 2 + i,
+      });
+      tilesPlaced++;
+    }
+  }
+
+  // Ensure blueprint count matches totalTiles exactly
+  const finalBlueprints = blueprints.slice(0, totalTiles);
+  return createTilesFromBlueprints(finalBlueprints, pool);
+}
+
+// Aliases for campaign generator
+export function generateLevel1(): TileItemData[] {
+  return generateLevel(1);
+}
+export function generateLevel2(): TileItemData[] {
+  return generateLevel(2);
+}
+export function generateLevel3(): TileItemData[] {
+  return generateLevel(3);
+}
+
+/**
+ * Deterministic Daily Challenge generator based on date string seed.
+ */
+export function generateDailyChallenge(dateStr: string): {
+  tiles: TileItemData[];
+  dayLabel: string;
+} {
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = (hash << 5) - hash + dateStr.charCodeAt(i);
+    hash |= 0;
+  }
+  const seed = Math.abs(hash) || 987654321;
+  const prng = createPRNG(seed);
+
+  // Daily challenge uses 8 types and 24 triplets (72 tiles)
+  const typesUsed = PROGRESSIVE_CHAMPION_ORDER.slice(0, 8);
+  const totalTriplets = 24; // 72 tiles
+  const totalTiles = 72;
+
+  const pool: TileType[] = [];
+  for (let i = 0; i < totalTriplets; i++) {
+    const t = typesUsed[i % typesUsed.length];
+    pool.push(t, t, t);
+  }
+  shuffleArray(pool, prng);
+
+  const blueprints: TileBlueprint[] = [];
+  let count = 0;
+
+  for (let l = 0; l <= 6 && count < totalTiles - 16; l++) {
+    const span = Math.max(2, 4 - Math.floor(l / 2));
+    const offset = (l % 2 === 1) ? 10 : 0;
+    for (let r = 0; r < span && count < totalTiles - 16; r++) {
+      for (let c = 0; c < span && count < totalTiles - 16; c++) {
+        blueprints.push({
+          x: (c - (span - 1) / 2) * (TILE_WIDTH - 4) + offset,
+          y: (r - (span - 1) / 2) * (TILE_HEIGHT - 6) - 15 + offset,
+          layer: l,
+        });
+        count++;
+      }
+    }
+  }
+
+  // Side overlapping decks
+  while (count < totalTiles) {
+    const isLeft = count % 2 === 0;
+    const idx = Math.floor((count - 56) / 2);
+    blueprints.push({
+      x: isLeft ? -118 - (idx % 2) * 6 : 118 + (idx % 2) * 6,
+      y: -70 + idx * 14,
+      layer: 5 + idx,
+    });
+    count++;
+  }
+
+  const tiles = createTilesFromBlueprints(blueprints.slice(0, totalTiles), pool);
+  return {
+    tiles,
+    dayLabel: getFormattedDayLabel(dateStr),
+  };
 }
