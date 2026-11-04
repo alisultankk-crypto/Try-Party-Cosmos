@@ -23,6 +23,7 @@ import {
   Maximize2,
   Minimize2,
   HelpCircle,
+  MoreHorizontal,
   Gem,
   Gift,
 } from 'lucide-react';
@@ -725,6 +726,10 @@ export default function App() {
     setBgmActive(active);
   };
 
+  const closeMoreMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.currentTarget.closest('details')?.removeAttribute('open');
+  };
+
   const handleToggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {});
@@ -918,13 +923,13 @@ export default function App() {
             </button>
           </div>
 
-          {/* Quick Actions & Controls */}
+          {/* Quick Actions */}
           <div className="flex items-center gap-1.5">
-            {/* 💎 Gem Inventory Button */}
             <button
               onClick={() => setShowInventoryModal(true)}
               className="relative p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-cyan-400/50 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)] transition active:scale-95 flex items-center gap-1"
               title={`${t.inventoryBtn} [I]`}
+              aria-label={t.inventoryBtn}
             >
               <Gem className="w-4 h-4 text-cyan-300" />
               {totalGemsCount > 0 && (
@@ -934,11 +939,11 @@ export default function App() {
               )}
             </button>
 
-            {/* 🎁 Daily Reward Button */}
             <button
               onClick={() => setShowDailyRewardModal(true)}
               className="relative p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-yellow-400/50 text-yellow-300 shadow-[0_0_12px_rgba(250,204,21,0.3)] transition active:scale-95"
               title={t.dailyRewardBtn}
+              aria-label={t.dailyRewardBtn}
             >
               <Gift className="w-4 h-4 text-yellow-400" />
               {!dailyLogin.hasClaimedToday && (
@@ -946,63 +951,80 @@ export default function App() {
               )}
             </button>
 
-            {/* 8-bit Retro Music Toggle */}
-            <button
-              onClick={handleToggleBGM}
-              className={`p-2 rounded-xl border backdrop-blur-md transition active:scale-95 shadow-sm ${
-                bgmActive
-                  ? 'bg-cyan-400 border-cyan-300 text-slate-950 shadow-[0_0_12px_rgba(34,211,238,0.7)] animate-pulse'
-                  : 'bg-slate-900/80 border-slate-700 text-slate-300'
-              }`}
-              title={`${bgmActive ? t.musicOn : t.musicOff} [B]`}
-            >
-              <Music className="w-4 h-4" />
-            </button>
-
-            {/* Sound Toggle */}
             <button
               onClick={handleToggleMute}
               className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-white shadow-sm transition active:scale-95"
               title={isMuted ? t.soundOff : t.soundOn}
+              aria-label={isMuted ? t.soundOff : t.soundOn}
             >
               {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
             </button>
 
-            {/* Help / Shortcuts Modal */}
-            <button
-              onClick={() => setShowHelpModal(true)}
-              className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-sky-400 hover:text-white shadow-sm transition active:scale-95"
-              title={`${t.rulesBtn} [H]`}
-            >
-              <HelpCircle className="w-4 h-4" />
-            </button>
-
-            {/* Fullscreen Toggle */}
-            <button
-              onClick={handleToggleFullscreen}
-              className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-cyan-400 hover:text-white shadow-sm transition active:scale-95 hidden sm:flex"
-              title={`${isFullscreen ? t.exitFullscreen : t.fullscreen} [F]`}
-            >
-              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-            </button>
-
-            {/* Daily Leaderboard */}
-            <button
-              onClick={() => setShowLeaderboard(true)}
-              className="p-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 border border-yellow-300 shadow-[0_0_15px_rgba(250,204,21,0.5)] transition active:scale-95"
-              title={t.speedrunLeaderboard}
-            >
-              <Trophy className="w-4 h-4 fill-current" />
-            </button>
-
-            {/* Restart Level */}
-            <button
-              onClick={startCurrentGame}
-              className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-white shadow-sm transition active:scale-95"
-              title="[R]"
-            >
-              <RotateCcw className="w-4 h-4 text-yellow-400" />
-            </button>
+            <details className="relative">
+              <summary
+                className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-700 bg-slate-900/80 text-slate-200 shadow-sm transition hover:bg-slate-800 active:scale-95 [&::-webkit-details-marker]:hidden"
+                aria-label={lang === 'ru' ? 'Дополнительные действия' : 'More actions'}
+                title={lang === 'ru' ? 'Дополнительные действия' : 'More actions'}
+              >
+                <MoreHorizontal className="w-5 h-5" />
+              </summary>
+              <div className="absolute right-0 top-full z-50 mt-2 flex w-56 flex-col gap-1 rounded-2xl border border-cyan-500/30 bg-slate-950/95 p-2 text-sm text-white shadow-xl backdrop-blur-md">
+                <button
+                  onClick={(event) => {
+                    closeMoreMenu(event);
+                    handleToggleBGM();
+                  }}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-slate-800"
+                >
+                  <Music className={`h-4 w-4 ${bgmActive ? 'text-cyan-300' : 'text-slate-400'}`} />
+                  {bgmActive ? t.musicOff : t.musicOn}
+                </button>
+                <button
+                  onClick={(event) => {
+                    closeMoreMenu(event);
+                    setShowHelpModal(true);
+                  }}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-slate-800"
+                >
+                  <HelpCircle className="h-4 w-4 text-sky-400" />
+                  {t.rulesBtn}
+                </button>
+                <button
+                  onClick={(event) => {
+                    closeMoreMenu(event);
+                    handleToggleFullscreen();
+                  }}
+                  className="hidden items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-slate-800 sm:flex"
+                >
+                  {isFullscreen ? (
+                    <Minimize2 className="h-4 w-4 text-cyan-400" />
+                  ) : (
+                    <Maximize2 className="h-4 w-4 text-cyan-400" />
+                  )}
+                  {isFullscreen ? t.exitFullscreen : t.fullscreen}
+                </button>
+                <button
+                  onClick={(event) => {
+                    closeMoreMenu(event);
+                    setShowLeaderboard(true);
+                  }}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-slate-800"
+                >
+                  <Trophy className="h-4 w-4 text-amber-400" />
+                  {t.speedrunLeaderboard}
+                </button>
+                <button
+                  onClick={(event) => {
+                    closeMoreMenu(event);
+                    startCurrentGame();
+                  }}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-slate-800"
+                >
+                  <RotateCcw className="h-4 w-4 text-yellow-400" />
+                  {lang === 'ru' ? 'Перезапустить уровень' : 'Restart level'}
+                </button>
+              </div>
+            </details>
           </div>
         </div>
 
