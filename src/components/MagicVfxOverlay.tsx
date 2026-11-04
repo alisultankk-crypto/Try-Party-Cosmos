@@ -4,6 +4,7 @@ import { MagicEffectType } from '../types/game';
 export interface MagicBurstTrigger {
   id: string;
   type: MagicEffectType;
+  color?: string;
   x: number; // Center X in viewport pixels
   y: number; // Center Y in viewport pixels
 }
@@ -38,7 +39,7 @@ export const MagicVfxOverlay: React.FC<MagicVfxOverlayProps> = ({ burst }) => {
   useEffect(() => {
     if (!burst) return;
 
-    const { type, x, y } = burst;
+    const { type, color, x, y } = burst;
     const pList = particlesRef.current;
 
     // 1. Add Shockwave Ring
@@ -50,13 +51,14 @@ export const MagicVfxOverlay: React.FC<MagicVfxOverlayProps> = ({ burst }) => {
       wind: '#34d399',
       starlight: '#fef08a',
     };
+    const accentColor = color || ringColors[type];
 
     blastRingsRef.current.push({
       x,
       y,
       r: 10,
       maxR: 95,
-      color: ringColors[type] || '#ffffff',
+      color: accentColor || '#ffffff',
       alpha: 1.0,
       type,
     });
@@ -71,23 +73,23 @@ export const MagicVfxOverlay: React.FC<MagicVfxOverlayProps> = ({ burst }) => {
       let shape: Particle['shape'] = 'circle';
 
       if (type === 'arcane') {
-        color = ['#c084fc', '#a855f7', '#e879f9', '#ffffff'][i % 4];
+        color = [accentColor, '#c084fc', '#a855f7', '#ffffff'][i % 4];
         shape = 'spark';
       } else if (type === 'fire') {
-        color = ['#f97316', '#ef4444', '#facc15', '#b91c1c'][i % 4];
+        color = [accentColor, '#ef4444', '#facc15', '#b91c1c'][i % 4];
         shape = 'spark';
       } else if (type === 'void') {
-        color = ['#6366f1', '#4338ca', '#818cf8', '#a855f7'][i % 4];
+        color = [accentColor, '#4338ca', '#818cf8', '#a855f7'][i % 4];
         shape = 'circle';
       } else if (type === 'frost') {
-        color = ['#67e8f9', '#38bdf8', '#e0f2fe', '#ffffff'][i % 4];
+        color = [accentColor, '#38bdf8', '#e0f2fe', '#ffffff'][i % 4];
         shape = 'shard';
       } else if (type === 'wind') {
-        color = ['#34d399', '#6ee7b7', '#a7f3d0', '#ffffff'][i % 4];
+        color = [accentColor, '#6ee7b7', '#a7f3d0', '#ffffff'][i % 4];
         shape = 'shard';
       } else {
         // starlight
-        color = ['#fde047', '#facc15', '#fef08a', '#ffffff'][i % 4];
+        color = [accentColor, '#facc15', '#fef08a', '#ffffff'][i % 4];
         shape = 'star';
       }
 

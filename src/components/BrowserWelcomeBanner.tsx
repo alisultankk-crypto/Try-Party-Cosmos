@@ -67,10 +67,6 @@ export const BrowserWelcomeBanner: React.FC<BrowserWelcomeBannerProps> = ({
             <Gift className="w-3.5 h-3.5 text-pink-400 shrink-0" />
             <span>{lang === 'ru' ? 'Ежедневные награды за вход 7 дней' : '7-Day Daily Login Rewards streak'}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-400 font-bold shrink-0">🐾</span>
-            <span>{lang === 'ru' ? 'Поро шутит каждые 3 сбора троек' : 'Poro cracks jokes every 3 match clears'}</span>
-          </div>
         </div>
 
         {/* Start Game Action Button */}

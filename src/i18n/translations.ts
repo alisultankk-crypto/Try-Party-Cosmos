@@ -61,10 +61,10 @@ export interface Translations {
   streakDay: string;
   comeBackTomorrow: string;
 
-  // Win Modal (Mashka praise)
+  // Win Modal
   winTitle: string;
   winDailyTitle: string;
-  mashkaPraises: string[];
+  campaignComplete: string;
   newGemFound: string;
   claimGem: string;
   nextLevel: string;
@@ -79,15 +79,12 @@ export interface Translations {
   reviveBtn: string;
   restartBtn: string;
 
-  // Poro Jokes
-  poroJokes: string[];
-  poroTitle: string;
 }
 
 export const TRANSLATIONS: Record<Language, Translations> = {
   ru: {
     gameTitle: 'Try Party: COSMOS',
-    gameTagline: 'Космическая вечеринка 3-в-ряд с пиксельными героями и камнями',
+    gameTagline: 'Космическая головоломка 3-в-ряд с котиками разных пород',
     dailyRewardBtn: 'Ежедневная награда',
     inventoryBtn: 'Инвентарь камней',
     rulesBtn: 'Справка & Клавиши',
@@ -144,14 +141,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
 
     winTitle: 'ЛЕГЕНДАРНАЯ ПОБЕДА!',
     winDailyTitle: 'ЕЖЕДНЕВНЫЙ ЧЕЛЛЕНДЖ СДАН!',
-    mashkaPraises: [
-      'Умничка, Машка! Твоя победа просто космос! 🌟',
-      'Машка, ты собираешь тройки быстрее, чем Faker ставит варды! 👑',
-      'Гениальный космический расчет, Машка! Галактика в восторге! 🚀',
-      'Машка — непревзойденная повелительница космических троек! 💎',
-      'Вот это скилл, Машка! Все 0.1% игроков аплодируют стоя! 👏',
-      'Машка, ты сияешь ярче всех звезд Таргона! Невероятный результат! ✨',
-    ],
+    campaignComplete: 'Ты прошла все 1000 уровней!',
     newGemFound: 'НОВАЯ НАХОДКА! Получен драгоценный камень:',
     claimGem: 'ПОЛОЖИТЬ В ИНВЕНТАРЬ',
     nextLevel: 'СЛЕДУЮЩИЙ УРОВЕНЬ 🔥',
@@ -160,32 +150,21 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     copied: 'СКОПИРОВАНО!',
 
     failTitle: 'СТАЗИС-ПЕРЕГРУЗКА!',
-    failSubtitle: 'Все 7 квантовых ячеек заполнены, связь с героями потеряна.',
+    failSubtitle: 'Все 7 ячеек заполнены — попробуй собрать тройку или используй бустер.',
     mashkaComforts: [
       'Не расстраивайся, Машка! В космосе бывают черные дыры, в следующий раз точно разнесешь! 💖',
       'Машка, ты была в одном шаге от триумфа! Встряхнись и давай еще разок! ✨',
-      'Не вешай нос, Машка! Даже великие чемпионы ошибаются слотом. Ты сможешь! 🚀',
-      'Мы верим в тебя, Машка! Поро держит за тебя лапки, попробуй снова! 🐾',
+      'Не вешай нос, Машка! Даже кошки иногда выбирают не ту карточку. Ты сможешь! 🚀',
+      'Мы верим в тебя, Машка! Попробуй снова — у тебя получится! ✨',
       'Машка, это была просто коварная гравитация! Жми рестарт и покажи им класс! 🌈',
     ],
     reviveBtn: 'ВОСКРЕСНУТЬ (ВЫНУТЬ 3 СЛОТА)',
     restartBtn: 'ПОПРОБОВАТЬ СНОВА',
 
-    poroTitle: 'Космический Поро шутит:',
-    poroJokes: [
-      'Знаешь, почему Ясуо не играет в прятки? Потому что его 0/10 видно по всей карте! 😂',
-      'Машка, ты собираешь тройки так быстро, что Джинкс завидует твоим взрывам! 🚀',
-      'Блицкранк снова притянул вражеского Гарена прямо к нам на вечеринку! 🤖',
-      'Почему Тимо никогда не мерзнет в открытом космосе? Потому что от него всегда горит! 🍄',
-      'Что кричит Ари, когда теряет карточку? "Куда укатился мой шар?!" 🦊',
-      'В космосе никто не услышит твой миссклик... кроме меня и этого кота Юми! 🐱',
-      'У меня лапки, но даже я вижу: этот трипл-сбор был шедевральным! 🐾',
-      'Аурелион Сол создал галактику, но даже он не может пройти Уровень 2 с первой попытки! 🌌',
-    ],
   },
   en: {
     gameTitle: 'Try Party: COSMOS',
-    gameTagline: 'Cosmic 3-Tile Match Party with Pixel Champions & Gemstones',
+    gameTagline: 'Cosmic 3-tile puzzle with cats of many breeds',
     dailyRewardBtn: 'Daily Reward',
     inventoryBtn: 'Gem Inventory',
     rulesBtn: 'Help & Hotkeys',
@@ -242,14 +221,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
 
     winTitle: 'LEGENDARY VICTORY!',
     winDailyTitle: 'DAILY CHALLENGE CLEARED!',
-    mashkaPraises: [
-      'Incredible job, Mashka! You are an absolute cosmic superstar! 🌟',
-      'Mashka, you match triplets faster than Faker places wards! 👑',
-      'Brilliant cosmic calculations, Mashka! The entire galaxy salutes you! 🚀',
-      'Mashka — the undefeated Empress of cosmic tiles! 💎',
-      'Pure mastery, Mashka! The top 0.1% players are giving you a standing ovation! 👏',
-      'Mashka, you shine brighter than Mount Targon’s greatest stars! 💖',
-    ],
+    campaignComplete: 'You cleared all 1,000 levels!',
     newGemFound: 'NEW DISCOVERY! Cosmic Gemstone Dropped:',
     claimGem: 'ADD TO INVENTORY',
     nextLevel: 'NEXT LEVEL 🔥',
@@ -258,27 +230,16 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     copied: 'COPIED!',
 
     failTitle: 'STASIS OVERLOAD!',
-    failSubtitle: 'All 7 quantum slots filled, telemetry lost with champions.',
+    failSubtitle: 'All 7 slots are full—make a match or use a booster.',
     mashkaComforts: [
       'Don’t be sad, Mashka! Even the deepest space has wormholes, you’ll smash it next time! 💖',
       'Keep your spirits high, Mashka! You were one single match away from victory! ✨',
-      'Chin up, Mashka! Even greatest champions miss a slot sometimes. You got this! 🚀',
-      'The Poros believe in you, Mashka! Let’s give it another spin! 🐾',
+      'Chin up, Mashka! Even cats pick the wrong tile sometimes. You got this! 🚀',
+      'We believe in you, Mashka! Give it another try! ✨',
       'It was just sneaky cosmic gravity, Mashka! Hit restart and show them who rules! 🌈',
     ],
     reviveBtn: 'REVIVE (EXTRACT 3 SLOTS)',
     restartBtn: 'TRY AGAIN',
 
-    poroTitle: 'Cosmic Poro Joke:',
-    poroJokes: [
-      'Why does Yasuo never play hide and seek? Because his 0/10 is visible on the minimap! 😂',
-      'Mashka, you match triplets so fast that Jinx is taking notes for her rockets! 🚀',
-      'Blitzcrank pulled the enemy Garen straight into our party again! 🤖',
-      'Why is Teemo never cold in deep space? Because his mushrooms keep everyone heated! 🍄',
-      'What does Ahri say when she loses a card? "Where did my orb roll off to?!" 🦊',
-      'In deep space, no one can hear your misclick... except me and Yuumi! 🐱',
-      'I only have fluffy paws, but that move was sheer galactic genius! 🐾',
-      'Aurelion Sol forged galaxies, but even he needed three tries on Level 2! 🌌',
-    ],
   },
 };

@@ -1,6 +1,6 @@
 /**
- * Level Generator for Triple Tile Cattle (Sheep a Sheep / 羊了个羊).
- * Generates layered tile pyramids, blind side stacks, and ensures all tiles exist in triplets.
+ * Level generator for the cosmic cat tile-matching campaign.
+ * Generates layered boards and ensures all tiles exist in triplets.
  * Includes deterministic Daily Challenge generator with 24-hour reset cycle.
  */
 
@@ -25,6 +25,8 @@ const ALL_TYPES: TileType[] = [
   'heimer',
   'katarina',
 ];
+
+export const MAX_CAMPAIGN_LEVEL = 1000;
 
 interface TileBlueprint {
   x: number;
@@ -81,193 +83,63 @@ function stringToSeed(str: string): number {
 }
 
 /**
- * Generates Level 1 (Tutorial):
- * 7 triplets (21 tiles) in 3 simple layers.
+ * Generates one of 1,000 campaign boards. Difficulty grows gradually by adding
+ * triplets and breeds, while each board stays within the playable arena.
  */
-export function generateLevel1(): TileItemData[] {
-  const typesUsed: TileType[] = ['yasuo', 'ahri', 'jinx', 'teemo'];
-  const totalTriplets = 7; // 21 tiles
+export function generateCampaignLevel(level: number): TileItemData[] {
+  const safeLevel = Math.max(1, Math.min(MAX_CAMPAIGN_LEVEL, Math.floor(level)));
+  const progress = (safeLevel - 1) / (MAX_CAMPAIGN_LEVEL - 1);
+  const totalTriplets = 7 + Math.ceil(53 * Math.pow(progress, 0.72));
+  const typeCount = Math.min(ALL_TYPES.length, totalTriplets, 4 + Math.floor((safeLevel - 1) / 90));
+  const typesUsed = ALL_TYPES.slice(0, typeCount);
+  const pool = Array.from({ length: totalTriplets }, (_, i) => typesUsed[i % typeCount])
+    .flatMap((type) => [type, type, type]);
 
-  const pool: TileType[] = [];
-  for (let i = 0; i < totalTriplets; i++) {
-    const t = typesUsed[i % typesUsed.length];
-    pool.push(t, t, t);
-  }
-  shuffleArray(pool);
-
-  const blueprints: TileBlueprint[] = [
-    // Layer 0 (Base 3x3)
-    { x: -50, y: -40, layer: 0 },
-    { x: 0,   y: -40, layer: 0 },
-    { x: 50,  y: -40, layer: 0 },
-    { x: -50, y: 15,  layer: 0 },
-    { x: 0,   y: 15,  layer: 0 },
-    { x: 50,  y: 15,  layer: 0 },
-    { x: -50, y: 70,  layer: 0 },
-    { x: 0,   y: 70,  layer: 0 },
-    { x: 50,  y: 70,  layer: 0 },
-
-    // Layer 1 (Offset 2x2 + sides)
-    { x: -25, y: -12, layer: 1 },
-    { x: 25,  y: -12, layer: 1 },
-    { x: -25, y: 42,  layer: 1 },
-    { x: 25,  y: 42,  layer: 1 },
-    { x: -80, y: 15,  layer: 1 },
-    { x: 80,  y: 15,  layer: 1 },
-
-    // Layer 2 (Center peak)
-    { x: 0,   y: 15,  layer: 2 },
-    { x: -35, y: 70,  layer: 2 },
-    { x: 35,  y: 70,  layer: 2 },
-    { x: -35, y: -40, layer: 2 },
-    { x: 35,  y: -40, layer: 2 },
-    { x: 0,   y: -12, layer: 3 },
-  ];
-
-  return createTilesFromBlueprints(blueprints, pool);
-}
-
-/**
- * Generates Level 2 (The Legendary Challenge):
- * 45 triplets (135 tiles)
- */
-export function generateLevel2(): TileItemData[] {
-  const typesUsed: TileType[] = ALL_TYPES.slice(0, 13);
-  const totalTriplets = 45; // 135 tiles total
-  const pool: TileType[] = [];
-
-  for (let i = 0; i < totalTriplets; i++) {
-    const t = typesUsed[i % typesUsed.length];
-    pool.push(t, t, t);
-  }
-  shuffleArray(pool);
-
-  const blueprints: TileBlueprint[] = [];
-
-  // Central Deep Pyramid (Layers 0 to 7)
-  for (let l = 0; l <= 7; l++) {
-    const span = Math.max(1, 4 - Math.floor(l / 2));
-    const offset = (l % 2 === 1) ? 14 : 0;
-    for (let r = 0; r < span; r++) {
-      for (let c = 0; c < span; c++) {
-        const x = (c - (span - 1) / 2) * (TILE_WIDTH - 6) + offset;
-        const y = (r - (span - 1) / 2) * (TILE_HEIGHT - 8) - 15 + offset;
-        blueprints.push({ x, y, layer: l });
-      }
-    }
+  const random = createPRNG(safeLevel * 7919 + 104729);
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
   }
 
-  // Left Draw-Stack (Long overlapping deck)
-  const leftStackCount = 20;
-  for (let i = 0; i < leftStackCount; i++) {
-    blueprints.push({
-      x: -125 - (i % 2) * 6,
-      y: -90 + i * 11,
-      layer: i + 10,
-    });
-  }
-
-  // Right Draw-Stack (Long overlapping deck)
-  const rightStackCount = 20;
-  for (let i = 0; i < rightStackCount; i++) {
-    blueprints.push({
-      x: 125 + (i % 2) * 6,
-      y: -90 + i * 11,
-      layer: i + 10,
-    });
-  }
-
-  // Bottom Support Columns
-  const bottomOffsets = [-60, -20, 20, 60];
-  bottomOffsets.forEach((bx) => {
-    for (let l = 0; l < 4; l++) {
-      blueprints.push({
-        x: bx + (l % 2) * 5,
-        y: 110 + (l % 2) * 4,
-        layer: l,
+  const columns = 7;
+  const rows = 6;
+  const positions: { x: number; y: number }[] = [];
+  for (let row = 0; row < rows; row++) {
+    for (let column = 0; column < columns; column++) {
+      positions.push({
+        x: (column - (columns - 1) / 2) * 40,
+        y: (row - (rows - 1) / 2) * 46,
       });
     }
-  });
-
-  while (blueprints.length > pool.length) blueprints.pop();
-  while (blueprints.length < pool.length) {
-    const randomExisting = blueprints[Math.floor(Math.random() * blueprints.length)];
-    blueprints.push({
-      x: randomExisting.x + (Math.random() - 0.5) * 12,
-      y: randomExisting.y + (Math.random() - 0.5) * 12,
-      layer: randomExisting.layer + 1,
-    });
   }
 
-  return createTilesFromBlueprints(blueprints, pool);
-}
-
-/**
- * Generates Level 3 (Grandmaster):
- * 51 triplets (153 tiles)
- */
-export function generateLevel3(): TileItemData[] {
-  const typesUsed: TileType[] = ALL_TYPES;
-  const totalTriplets = 51; // 153 tiles
-  const pool: TileType[] = [];
-
-  for (let i = 0; i < totalTriplets; i++) {
-    const t = typesUsed[i % typesUsed.length];
-    pool.push(t, t, t);
-  }
-  shuffleArray(pool);
-
-  const blueprints: TileBlueprint[] = [];
-
-  // Dual Tower Formations
-  [-65, 65].forEach((towerX) => {
-    for (let l = 0; l <= 6; l++) {
-      const size = Math.max(1, 3 - Math.floor(l / 2.5));
-      for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-          blueprints.push({
-            x: towerX + (c - (size - 1) / 2) * 40,
-            y: (r - (size - 1) / 2) * 44 - 10,
-            layer: l,
-          });
-        }
-      }
+  const layout = safeLevel % 4;
+  positions.sort((a, b) => {
+    if (layout === 0) {
+      return Math.hypot(a.x, a.y) - Math.hypot(b.x, b.y);
     }
-  });
-
-  // Four corner decks
-  const corners = [
-    { x: -120, y: -70 },
-    { x: 120, y: -70 },
-    { x: -120, y: 70 },
-    { x: 120, y: 70 },
-  ];
-  corners.forEach((corn) => {
-    for (let i = 0; i < 12; i++) {
-      blueprints.push({
-        x: corn.x + (i % 2) * 4,
-        y: corn.y + i * 8,
-        layer: i + 10,
-      });
+    if (layout === 1) {
+      if (a.y !== b.y) return a.y - b.y;
+      const row = Math.round(a.y / 46 + (rows - 1) / 2);
+      return row % 2 === 0 ? a.x - b.x : b.x - a.x;
     }
+    if (layout === 2) {
+      return Math.abs(a.x) - Math.abs(b.x) || a.y - b.y;
+    }
+    return Math.atan2(a.y, a.x) - Math.atan2(b.y, b.x);
   });
 
-  // Central connector bridge
-  for (let l = 0; l < 5; l++) {
-    blueprints.push(
-      { x: 0, y: -40, layer: l + 1 },
-      { x: 0, y: 0,   layer: l + 1 },
-      { x: 0, y: 40,  layer: l + 1 }
-    );
-  }
+  const boardPositions = positions.slice(0, 18 + Math.floor(progress * 24));
+  const blueprints = pool.map((_, index) => {
+    const position = boardPositions[index % boardPositions.length];
+    return {
+      x: position.x,
+      y: position.y,
+      layer: Math.floor(index / boardPositions.length),
+    };
+  });
 
-  while (blueprints.length > pool.length) blueprints.pop();
-  while (blueprints.length < pool.length) {
-    const ref = blueprints[Math.floor(Math.random() * blueprints.length)];
-    blueprints.push({ x: ref.x + 8, y: ref.y + 8, layer: ref.layer + 1 });
-  }
-
-  return createTilesFromBlueprints(blueprints, pool);
+  return createTilesFromBlueprints(blueprints, pool, random);
 }
 
 /**
@@ -465,12 +337,5 @@ export function updateCoveredState(tiles: TileItemData[]) {
         }
       }
     }
-  }
-}
-
-function shuffleArray<T>(arr: T[]) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
 }
