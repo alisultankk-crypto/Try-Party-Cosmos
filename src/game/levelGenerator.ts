@@ -89,7 +89,7 @@ function stringToSeed(str: string): number {
 export function generateCampaignLevel(level: number): TileItemData[] {
   const safeLevel = Math.max(1, Math.min(MAX_CAMPAIGN_LEVEL, Math.floor(level)));
   const progress = (safeLevel - 1) / (MAX_CAMPAIGN_LEVEL - 1);
-  const totalTriplets = 7 + Math.ceil(68 * Math.pow(progress, 0.72));
+  const totalTriplets = 7 + Math.ceil(120 * Math.pow(progress, 0.72));
   const typeCount = Math.min(ALL_TYPES.length, totalTriplets, 4 + Math.floor((safeLevel - 1) / 60));
   const typesUsed = ALL_TYPES.slice(0, typeCount);
   const pool = Array.from({ length: totalTriplets }, (_, i) => typesUsed[i % typeCount])
