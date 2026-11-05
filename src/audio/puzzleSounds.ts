@@ -141,34 +141,6 @@ class CosmicAudioEngine {
   }
 
   /**
-   * 8-битный звук нахождения драгоценного камня (Rare Item Chime)
-   */
-  public playGemDrop() {
-    if (this.isMuted) return;
-    this.initCtx();
-    if (!this.ctx || !this.masterGain) return;
-
-    const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98]; // C5 to G6 arpeggio
-    notes.forEach((freq, idx) => {
-      const t = this.ctx!.currentTime + idx * 0.06;
-      const osc = this.ctx!.createOscillator();
-      const gain = this.ctx!.createGain();
-
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(freq, t);
-
-      gain.gain.setValueAtTime(0.22, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
-
-      osc.connect(gain);
-      gain.connect(this.masterGain!);
-
-      osc.start(t);
-      osc.stop(t + 0.18);
-    });
-  }
-
-  /**
    * 8-битный звук супер-заклинания при трипле
    */
   public playMagicBurst(effectType: MagicEffectType = 'arcane') {

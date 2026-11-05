@@ -1,6 +1,6 @@
 import React from 'react';
 import { TileItemData, Language } from '../types/game';
-import { CHAMPION_METAS, FunnyCosmicChamps } from './FunnyCosmicChamps';
+import { CosmicCardImage, getCardMeta } from './CosmicCards';
 
 interface ReserveShelfProps {
   tiles: TileItemData[];
@@ -24,7 +24,7 @@ export const ReserveShelf: React.FC<ReserveShelfProps> = ({
       </div>
       <div className="flex items-center gap-2 p-2 rounded-2xl bg-slate-950/85 backdrop-blur-md border-2 border-indigo-500/40 shadow-2xl">
         {tiles.map((tile) => {
-          const meta = CHAMPION_METAS[tile.type];
+          const meta = getCardMeta(tile.type);
           return (
             <div
               key={tile.id}
@@ -38,7 +38,7 @@ export const ReserveShelf: React.FC<ReserveShelfProps> = ({
                 boxShadow: meta ? `0 0 12px ${meta.glowColor}` : undefined,
               }}
             >
-              <FunnyCosmicChamps type={tile.type} isCovered={false} />
+              <CosmicCardImage type={tile.type} isCovered={false} />
             </div>
           );
         })}

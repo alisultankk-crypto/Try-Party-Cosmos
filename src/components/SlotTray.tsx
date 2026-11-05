@@ -1,6 +1,6 @@
 import React from 'react';
 import { TileItemData, Language } from '../types/game';
-import { CHAMPION_METAS, FunnyCosmicChamps } from './FunnyCosmicChamps';
+import { CosmicCardImage, getCardMeta } from './CosmicCards';
 
 interface SlotTrayProps {
   slots: TileItemData[];
@@ -30,7 +30,7 @@ export const SlotTray: React.FC<SlotTrayProps> = ({
         {Array.from({ length: maxSlots }).map((_, idx) => {
           const tile = slots[idx];
           const isMatching = tile && matchingIds.includes(tile.id);
-          const meta = tile ? CHAMPION_METAS[tile.type] : null;
+          const meta = tile ? getCardMeta(tile.type) : null;
 
           return (
             <div
@@ -51,7 +51,7 @@ export const SlotTray: React.FC<SlotTrayProps> = ({
                       : undefined,
                   }}
                 >
-                  <FunnyCosmicChamps type={tile.type} isCovered={false} />
+                  <CosmicCardImage type={tile.type} isCovered={false} />
                 </div>
               )}
             </div>

@@ -1,7 +1,7 @@
 import React from 'react';
-import { X, Keyboard, Sparkles, Gem, Trophy } from 'lucide-react';
-import { CHAMPION_METAS, FunnyCosmicChamps } from './FunnyCosmicChamps';
-import { Language, TileType } from '../types/game';
+import { X, Keyboard, Sparkles, Coins, Trophy } from 'lucide-react';
+import { CAMPAIGN_TILE_TYPES, CosmicCardImage, getCardMeta } from './CosmicCards';
+import { Language } from '../types/game';
 import { TRANSLATIONS } from '../i18n/translations';
 
 interface BrowserHelpModalProps {
@@ -60,19 +60,22 @@ export const BrowserHelpModal: React.FC<BrowserHelpModalProps> = ({
 
           <div className="rounded-2xl border border-violet-500/20 bg-slate-950/60 p-3">
             <div className="mb-2 text-xs font-bold text-violet-300">
-              {lang === 'ru' ? '14 космических персонажей и стихийных эффектов' : '14 cosmic champions and elemental effects'}
+              {lang === 'ru' ? 'Космические персонажи и стихийные эффекты' : 'Cosmic champions and elemental effects'}
             </div>
             <div className="grid grid-cols-7 gap-1.5">
-              {(Object.keys(CHAMPION_METAS) as TileType[]).map((type) => (
+              {CAMPAIGN_TILE_TYPES.map((type) => {
+                const meta = getCardMeta(type);
+                return (
                 <div
                   key={type}
                   className="flex aspect-square items-center justify-center rounded-lg border border-slate-700"
-                  style={{ backgroundColor: `color-mix(in srgb, ${CHAMPION_METAS[type].accentColor} 35%, #111827)` }}
-                  title={`${CHAMPION_METAS[type].name}: ${CHAMPION_METAS[type].funnyName}`}
+                  style={{ backgroundColor: `color-mix(in srgb, ${meta.accentColor} 35%, #111827)` }}
+                  title={meta.name}
                 >
-                  <FunnyCosmicChamps type={type} />
+                  <CosmicCardImage type={type} />
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -80,23 +83,23 @@ export const BrowserHelpModal: React.FC<BrowserHelpModalProps> = ({
             <div className="text-xl">⚠️</div>
             <div>
               <span className="font-bold text-rose-300">
-                {lang === 'ru' ? 'Стазис-лоток на 7 слотов:' : '7-Slot Tray:'}
+                {lang === 'ru' ? 'Слоты лотка:' : 'Tray slots:'}
               </span>{' '}
               {lang === 'ru'
-                ? 'Если лоток заполнится 7 карточками без совпадений — наступает перегрузка!'
-                : 'If the tray fills with 7 unmatched cards, stasis overload triggers!'}
+                ? 'Если лоток заполнится картами без совпадений — наступает перегрузка. Дополнительный слот можно купить в магазине.'
+                : 'If the tray fills with unmatched cards, stasis overload triggers. Buy an extra slot in the shop.'}
             </div>
           </div>
 
           <div className="p-3 rounded-2xl bg-slate-950/60 border border-amber-500/20 flex gap-3 items-start">
-            <div className="text-xl">💎</div>
+            <Coins className="mt-1 h-5 w-5 shrink-0 text-yellow-300" />
             <div>
               <span className="font-bold text-yellow-300">
-                {lang === 'ru' ? 'Инвентарь и камни:' : 'Gem Inventory:'}
+                {lang === 'ru' ? 'Золото и магазин:' : 'Gold & Shop:'}
               </span>{' '}
               {lang === 'ru'
-                ? 'За каждую победу на уровне выпадает 1 драгоценный космический камень в коллекцию!'
-                : '1 rare cosmic gemstone drops into your collection with every victorious level clear!'}
+                ? 'Получай золото за собранные тройки и победы. Покупай подсказки, отмены, перемешивание и дополнительный слот.'
+                : 'Earn gold from matches and wins. Buy hints, undos, shuffles, and an extra tray slot.'}
             </div>
           </div>
         </div>

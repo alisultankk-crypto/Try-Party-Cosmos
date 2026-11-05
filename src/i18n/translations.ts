@@ -4,7 +4,6 @@ export interface Translations {
   gameTitle: string;
   gameTagline: string;
   dailyRewardBtn: string;
-  inventoryBtn: string;
   rulesBtn: string;
   soundOn: string;
   soundOff: string;
@@ -41,18 +40,6 @@ export interface Translations {
   time: string;
   close: string;
 
-  // Inventory
-  inventoryTitle: string;
-  inventorySubtitle: string;
-  totalCollected: string;
-  rarityCommon: string;
-  rarityRare: string;
-  rarityEpic: string;
-  rarityLegendary: string;
-  dropRateNotice: string;
-  unlockedGems: string;
-  clickToInspect: string;
-
   // Daily Login
   dailyLoginTitle: string;
   dailyLoginSubtitle: string;
@@ -66,8 +53,6 @@ export interface Translations {
   winTitle: string;
   winDailyTitle: string;
   campaignComplete: string;
-  newGemFound: string;
-  claimGem: string;
   nextLevel: string;
   playAgain: string;
   shareRecord: string;
@@ -87,7 +72,6 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     gameTitle: 'Try Party: COSMOS',
     gameTagline: 'Космическая головоломка 3-в-ряд с героями',
     dailyRewardBtn: 'Ежедневная награда',
-    inventoryBtn: 'Инвентарь камней',
     rulesBtn: 'Справка & Клавиши',
     soundOn: 'Звук ВКЛ',
     soundOff: 'Звук ВЫКЛ',
@@ -122,19 +106,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     time: 'Время',
     close: 'Закрыть',
 
-    inventoryTitle: 'Инвентарь Космических Самоцветов',
-    inventorySubtitle: 'Драгоценные камни выпадают ровно по 1 штуке за каждую победу на уровне!',
-    totalCollected: 'Собрано камней в коллекции',
-    rarityCommon: 'Обычный',
-    rarityRare: 'Редкий',
-    rarityEpic: 'Эпический',
-    rarityLegendary: 'Легендарный',
-    dropRateNotice: 'Камни хранятся в твоем космическом ранце навсегда!',
-    unlockedGems: 'Открыто видов',
-    clickToInspect: 'Нажми на кристалл для изучения его космической истории',
-
     dailyLoginTitle: 'Ежедневная Награда за Вход',
-    dailyLoginSubtitle: 'Заходи каждый день, забирай редкие бустеры и драгоценные камни!',
+    dailyLoginSubtitle: 'Заходи каждый день, забирай золото и полезные бустеры!',
     day: 'День',
     claimReward: 'ЗАБРАТЬ НАГРАДУ!',
     claimedToday: 'Награда уже получена сегодня!',
@@ -143,16 +116,14 @@ export const TRANSLATIONS: Record<Language, Translations> = {
 
     winTitle: 'ЛЕГЕНДАРНАЯ ПОБЕДА!',
     winDailyTitle: 'ЕЖЕДНЕВНЫЙ ЧЕЛЛЕНДЖ СДАН!',
-    campaignComplete: 'Ты прошла все 1000 уровней!',
-    newGemFound: 'НОВАЯ НАХОДКА! Получен драгоценный камень:',
-    claimGem: 'ПОЛОЖИТЬ В ИНВЕНТАРЬ',
+    campaignComplete: 'Ты прошла все 777 уровней!',
     nextLevel: 'СЛЕДУЮЩИЙ УРОВЕНЬ 🔥',
     playAgain: 'СЫГРАТЬ ЕЩЕ РАЗ',
     shareRecord: 'ПОДЕЛИТЬСЯ РЕЗУЛЬТАТОМ',
     copied: 'СКОПИРОВАНО!',
 
     failTitle: 'СТАЗИС-ПЕРЕГРУЗКА!',
-    failSubtitle: 'Все 7 ячеек заполнены — попробуй собрать тройку или используй бустер.',
+    failSubtitle: 'Все ячейки заполнены — попробуй собрать тройку или используй бустер.',
     mashkaComforts: [
       'Не расстраивайся, Машка! В космосе бывают черные дыры, в следующий раз точно разнесешь! 💖',
       'Машка, ты была в одном шаге от триумфа! Встряхнись и давай еще разок! ✨',
@@ -166,9 +137,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
   },
   en: {
     gameTitle: 'Try Party: COSMOS',
-    gameTagline: 'Cosmic 3-tile puzzle with cats of many breeds',
+    gameTagline: 'Cosmic 3-tile puzzle with champions',
     dailyRewardBtn: 'Daily Reward',
-    inventoryBtn: 'Gem Inventory',
     rulesBtn: 'Help & Hotkeys',
     soundOn: 'Sound ON',
     soundOff: 'Sound OFF',
@@ -203,19 +173,8 @@ export const TRANSLATIONS: Record<Language, Translations> = {
     time: 'Time',
     close: 'Close',
 
-    inventoryTitle: 'Cosmic Gemstones Inventory',
-    inventorySubtitle: 'Exactly 1 rare cosmic gemstone drops for each victorious level clear!',
-    totalCollected: 'Total Gems Collected',
-    rarityCommon: 'Common',
-    rarityRare: 'Rare',
-    rarityEpic: 'Epic',
-    rarityLegendary: 'Legendary',
-    dropRateNotice: 'Collected gemstones are saved forever in your cosmic vault!',
-    unlockedGems: 'Discovered Types',
-    clickToInspect: 'Click any gem to view its interstellar lore and origin',
-
     dailyLoginTitle: 'Daily Login Reward',
-    dailyLoginSubtitle: 'Log in every day to claim bonus boosters and radiant cosmic gems!',
+    dailyLoginSubtitle: 'Log in every day to claim gold and useful boosters!',
     day: 'Day',
     claimReward: 'CLAIM REWARD!',
     claimedToday: 'Already claimed today!',
@@ -224,16 +183,14 @@ export const TRANSLATIONS: Record<Language, Translations> = {
 
     winTitle: 'LEGENDARY VICTORY!',
     winDailyTitle: 'DAILY CHALLENGE CLEARED!',
-    campaignComplete: 'You cleared all 1,000 levels!',
-    newGemFound: 'NEW DISCOVERY! Cosmic Gemstone Dropped:',
-    claimGem: 'ADD TO INVENTORY',
+    campaignComplete: 'You cleared all 777 levels!',
     nextLevel: 'NEXT LEVEL 🔥',
     playAgain: 'PLAY AGAIN',
     shareRecord: 'SHARE RECORD',
     copied: 'COPIED!',
 
     failTitle: 'STASIS OVERLOAD!',
-    failSubtitle: 'All 7 slots are full—make a match or use a booster.',
+    failSubtitle: 'All tray slots are full—make a match or use a booster.',
     mashkaComforts: [
       'Don’t be sad, Mashka! Even the deepest space has wormholes, you’ll smash it next time! 💖',
       'Keep your spirits high, Mashka! You were one single match away from victory! ✨',
