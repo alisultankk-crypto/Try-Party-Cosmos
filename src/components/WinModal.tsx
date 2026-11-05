@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import { Trophy, Sparkles, ArrowRight, RotateCcw, Timer, Share2, Check } from 'lucide-react';
-import { GameMode, Language, CosmicGem } from '../types/game';
+import { GameMode, Language } from '../types/game';
 import { formatTimePrecise } from './DailyTimer';
 import { TRANSLATIONS } from '../i18n/translations';
-import { CosmicGemSvg } from './CosmicGemSvg';
 
 interface WinModalProps {
   isOpen: boolean;
   level: number;
   mode: GameMode;
-  score?: number;
   completionTimeSeconds?: number;
   isNewBest?: boolean;
   dailyRank?: number;
-  droppedGem?: CosmicGem | null;
+  goldEarned?: number;
   lang?: Language;
   isCampaignComplete?: boolean;
   onNextLevel: () => void;
@@ -25,11 +23,10 @@ export const WinModal: React.FC<WinModalProps> = ({
   isOpen,
   level,
   mode,
-  score,
   completionTimeSeconds,
   isNewBest = false,
   dailyRank,
-  droppedGem = null,
+  goldEarned = 0,
   lang = 'ru',
   isCampaignComplete = false,
   onNextLevel,
@@ -74,26 +71,6 @@ export const WinModal: React.FC<WinModalProps> = ({
           </div>
         )}
 
-        {/* Dropped Cosmic Gemstone Reward */}
-        {droppedGem && (
-          <div className="p-3 rounded-2xl bg-slate-950 text-white border-2 border-cyan-400 my-3 shadow-lg flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center border border-white/10 shrink-0">
-              <CosmicGemSvg gem={droppedGem} size={36} />
-            </div>
-            <div className="text-left">
-              <div className="text-[10px] uppercase font-black text-cyan-300">
-                {t.newGemFound}
-              </div>
-              <div className="text-xs font-black text-white">
-                {droppedGem.name[lang]}
-              </div>
-              <div className="text-[10px] text-amber-300">
-                +1 {lang === 'ru' ? 'добавлено в инвентарь!' : 'added to inventory!'}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Daily Time & Rank Badge */}
         {isDaily && completionTimeSeconds !== undefined && (
           <div className="p-3 rounded-2xl bg-slate-900 text-white border-2 border-yellow-400 mb-3 shadow-lg flex flex-col items-center">
@@ -120,11 +97,10 @@ export const WinModal: React.FC<WinModalProps> = ({
           </div>
         )}
 
-        {/* Score Earned */}
-        {score !== undefined && score > 0 && (
+        {goldEarned > 0 && (
           <div className="p-2.5 rounded-xl bg-amber-400/30 border border-yellow-500 mb-3 flex items-center justify-between px-3">
-            <span className="text-xs font-black text-amber-900 uppercase">{t.points}:</span>
-            <span className="font-mono text-lg font-black text-amber-950">+{score.toLocaleString()} ⭐</span>
+            <span className="text-xs font-black text-amber-900 uppercase">{lang === 'ru' ? 'Золото' : 'Gold'}:</span>
+            <span className="font-mono text-lg font-black text-amber-950">+{goldEarned.toLocaleString()} 🪙</span>
           </div>
         )}
 

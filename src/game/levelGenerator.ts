@@ -4,7 +4,8 @@
  * Includes deterministic Daily Challenge generator with 24-hour reset cycle.
  */
 
-import { TileType, TileItemData } from '../types/game';
+import { TileItemData, TileType } from '../types/game';
+import { CAMPAIGN_TILE_TYPES } from '../components/CosmicCards';
 
 export const TILE_WIDTH = 48;
 export const TILE_HEIGHT = 56;
@@ -26,7 +27,7 @@ const ALL_TYPES: TileType[] = [
   'katarina',
 ];
 
-export const MAX_CAMPAIGN_LEVEL = 1000;
+export const MAX_CAMPAIGN_LEVEL = 777;
 export const COSMIC_MAP_LEVEL = 25;
 
 interface TileBlueprint {
@@ -84,16 +85,17 @@ function stringToSeed(str: string): number {
 }
 
 /**
- * Generates one of 1,000 campaign boards with steadily increasing difficulty.
+ * Generates one of 777 campaign boards with new card types every 50 levels.
  */
 export function generateCampaignLevel(level: number): TileItemData[] {
   const safeLevel = Math.max(1, Math.min(MAX_CAMPAIGN_LEVEL, Math.floor(level)));
   const progress = (safeLevel - 1) / (MAX_CAMPAIGN_LEVEL - 1);
-  const totalTriplets = 7 + Math.ceil(120 * Math.pow(progress, 0.72));
-  const typeCount = Math.min(ALL_TYPES.length, totalTriplets, 4 + Math.floor((safeLevel - 1) / 60));
-  const typesUsed = ALL_TYPES.slice(0, typeCount);
-  const pool = Array.from({ length: totalTriplets }, (_, i) => typesUsed[i % typeCount])
-    .flatMap((type) => [type, type, type]);
+  const typeCount = Math.min(CAMPAIGN_TILE_TYPES.length, 12 + Math.floor((safeLevel - 1) / 50) * 2);
+  const totalTriplets = Math.max(typeCount, 12 + Math.ceil(115 * Math.pow(progress, 0.72)));
+  const pool = Array.from(
+    { length: totalTriplets },
+    (_, i) => CAMPAIGN_TILE_TYPES[i % typeCount]
+  ).flatMap((type) => [type, type, type]);
 
   const random = createPRNG(safeLevel * 7919 + 104729);
   for (let i = pool.length - 1; i > 0; i--) {
@@ -113,7 +115,7 @@ export function generateCampaignLevel(level: number): TileItemData[] {
     }
   }
 
-  const layout = safeLevel === COSMIC_MAP_LEVEL ? 4 : (safeLevel - 1) % 4;
+  const layout = safeLevel === COSMIC_MAP_LEVEL ? 4 : Math.floor(random() * 6);
   positions.sort((a, b) => {
     if (layout === 4) {
       const rocketRows = [
@@ -142,7 +144,15 @@ export function generateCampaignLevel(level: number): TileItemData[] {
     if (layout === 2) {
       return Math.abs(a.x) - Math.abs(b.x) || a.y - b.y;
     }
-    return Math.atan2(a.y, a.x) - Math.atan2(b.y, b.x);
+    if (layout === 3) {
+      return Math.atan2(a.y, a.x) - Math.atan2(b.y, b.x);
+    }
+    if (layout === 5) {
+      const spiralRank = (position: { x: number; y: number }) =>
+        Math.atan2(position.y, position.x) + Math.hypot(position.x, position.y) / 70;
+      return spiralRank(a) - spiralRank(b);
+    }
+    return Math.abs(a.x) + Math.abs(a.y) - Math.abs(b.x) - Math.abs(b.y);
   });
 
   const boardPositions = positions.slice(0, 18 + Math.floor(progress * 24));

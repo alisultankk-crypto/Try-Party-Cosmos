@@ -12,7 +12,67 @@ export type TileType =
   | 'asol'
   | 'lux'
   | 'heimer'
-  | 'katarina';
+  | 'katarina'
+  | 'nebula'
+  | 'comet'
+  | 'satellite'
+  | 'ufo'
+  | 'moon'
+  | 'sun'
+  | 'mars'
+  | 'saturn'
+  | 'blackhole'
+  | 'galaxy'
+  | 'astronaut'
+  | 'rocket'
+  | 'telescope'
+  | 'meteor'
+  | 'starship'
+  | 'crystal'
+  | 'portal'
+  | 'rover'
+  | 'aurora'
+  | 'pulsar'
+  | 'quasar'
+  | 'stardust'
+  | 'eclipse'
+  | 'probe'
+  | 'spacewhale'
+  | 'cosmicflower'
+  | 'ringworld'
+  | 'constellation';
+
+export type OriginalTileType = Exclude<
+  TileType,
+  | 'nebula'
+  | 'comet'
+  | 'satellite'
+  | 'ufo'
+  | 'moon'
+  | 'sun'
+  | 'mars'
+  | 'saturn'
+  | 'blackhole'
+  | 'galaxy'
+  | 'astronaut'
+  | 'rocket'
+  | 'telescope'
+  | 'meteor'
+  | 'starship'
+  | 'crystal'
+  | 'portal'
+  | 'rover'
+  | 'aurora'
+  | 'pulsar'
+  | 'quasar'
+  | 'stardust'
+  | 'eclipse'
+  | 'probe'
+  | 'spacewhale'
+  | 'cosmicflower'
+  | 'ringworld'
+  | 'constellation'
+>;
 
 export type MagicEffectType =
   | 'arcane'
@@ -40,6 +100,7 @@ export interface BoostersState {
   undo: number;
   shuffle: number;
   extract: number;
+  hint: number;
 }
 
 export interface RegionScore {
@@ -70,21 +131,6 @@ export interface DailyChallengeInfo {
 // ==========================================
 // 💎 ДРАГОЦЕННЫЕ КАМНИ И ИНВЕНТАРЬ
 // ==========================================
-
-export type GemRarity = 'common' | 'rare' | 'epic' | 'legendary';
-
-export interface CosmicGem {
-  id: string;
-  name: { ru: string; en: string };
-  titleLore: { ru: string; en: string };
-  rarity: GemRarity;
-  color: string;
-  glowColor: string;
-  shape: 'diamond' | 'hexagon' | 'star' | 'emerald' | 'crystal' | 'heart' | 'teardrop' | 'orb';
-  baseDropRate: number; // 0 to 1
-}
-
-export type GemInventory = Record<string, number>;
 
 export interface DailyLoginState {
   lastClaimDate: string; // YYYY-MM-DD

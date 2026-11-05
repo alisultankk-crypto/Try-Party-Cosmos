@@ -1,6 +1,6 @@
 import React from 'react';
 import { TileItemData } from '../types/game';
-import { CHAMPION_METAS, FunnyCosmicChamps } from './FunnyCosmicChamps';
+import { CosmicCardImage, getCardMeta } from './CosmicCards';
 
 interface TileItemProps {
   tile: TileItemData;
@@ -18,7 +18,7 @@ export const TileItem: React.FC<TileItemProps> = ({
   isHinted = false,
 }) => {
   const isClickable = !tile.isCovered && !tile.inSlot && !tile.inShelf;
-  const meta = CHAMPION_METAS[tile.type];
+  const meta = getCardMeta(tile.type);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -65,7 +65,7 @@ export const TileItem: React.FC<TileItemProps> = ({
             isClickable ? 'scale-100' : 'scale-95'
           }`}
         >
-          <FunnyCosmicChamps type={tile.type} isCovered={tile.isCovered} />
+          <CosmicCardImage type={tile.type} isCovered={tile.isCovered} />
         </div>
 
         {/* Dimming Layer when covered by higher tiles */}

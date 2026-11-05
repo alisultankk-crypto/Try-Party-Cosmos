@@ -1,8 +1,6 @@
 import React from 'react';
 import { Gift, Check, Sparkles, X, Flame } from 'lucide-react';
-import { Language, DailyLoginState, BoostersState, CosmicGem } from '../types/game';
-import { COSMIC_GEMS } from '../data/cosmicGems';
-import { CosmicGemSvg } from './CosmicGemSvg';
+import { Language, DailyLoginState, BoostersState } from '../types/game';
 import { TRANSLATIONS } from '../i18n/translations';
 import { puzzleSounds } from '../audio/puzzleSounds';
 
@@ -11,13 +9,13 @@ interface DailyRewardModalProps {
   onClose: () => void;
   dailyLogin: DailyLoginState;
   lang: Language;
-  onClaim: (boostersEarned: Partial<BoostersState>, gemEarned: CosmicGem) => void;
+  onClaim: (boostersEarned: Partial<BoostersState>, goldEarned: number) => void;
 }
 
 interface RewardTier {
   day: number;
   boosters: Partial<BoostersState>;
-  gemId: string;
+  gold: number;
   labelRu: string;
   labelEn: string;
 }
@@ -26,49 +24,49 @@ const REWARDS_SCHEDULE: RewardTier[] = [
   {
     day: 1,
     boosters: { undo: 1 },
-    gemId: 'freljord_emerald',
+    gold: 50,
     labelRu: '+1 Отмена',
     labelEn: '+1 Undo',
   },
   {
     day: 2,
     boosters: { shuffle: 1 },
-    gemId: 'bandle_topaz',
+    gold: 75,
     labelRu: '+1 Перемешать',
     labelEn: '+1 Shuffle',
   },
   {
     day: 3,
     boosters: { extract: 1 },
-    gemId: 'star_ruby',
+    gold: 100,
     labelRu: '+1 Вынуть 3',
     labelEn: '+1 Extract 3',
   },
   {
     day: 4,
     boosters: { undo: 2 },
-    gemId: 'astral_sapphire',
+    gold: 125,
     labelRu: '+2 Отмены',
     labelEn: '+2 Undos',
   },
   {
     day: 5,
     boosters: { shuffle: 2 },
-    gemId: 'void_amethyst',
+    gold: 150,
     labelRu: '+2 Перемешать',
     labelEn: '+2 Shuffles',
   },
   {
     day: 6,
     boosters: { extract: 2 },
-    gemId: 'solar_amber',
+    gold: 200,
     labelRu: '+2 Вынуть 3',
     labelEn: '+2 Extracts',
   },
   {
     day: 7,
     boosters: { undo: 3, shuffle: 3, extract: 3 },
-    gemId: 'dragon_diamond',
+    gold: 500,
     labelRu: '🔥 ДЖЕКПОТ! +3 Всех',
     labelEn: '🔥 JACKPOT! +3 All',
   },
@@ -88,12 +86,10 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({
   // Current active reward tier based on streak (1..7)
   const currentTierIndex = Math.min(Math.max(streak - 1, 0), 6);
   const currentReward = REWARDS_SCHEDULE[currentTierIndex];
-  const associatedGem = COSMIC_GEMS.find((g) => g.id === currentReward.gemId) || COSMIC_GEMS[0];
-
   const handleClaimClick = () => {
     if (hasClaimedToday) return;
-    puzzleSounds.playGemDrop();
-    onClaim(currentReward.boosters, associatedGem);
+    puzzleSounds.playBooster();
+    onClaim(currentReward.boosters, currentReward.gold);
   };
 
   return (
@@ -132,8 +128,6 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({
           {REWARDS_SCHEDULE.map((tier) => {
             const isPast = tier.day < streak || (tier.day === streak && hasClaimedToday);
             const isToday = tier.day === streak && !hasClaimedToday;
-            const gem = COSMIC_GEMS.find((g) => g.id === tier.gemId) || COSMIC_GEMS[0];
-
             return (
               <div
                 key={tier.day}
@@ -150,14 +144,12 @@ export const DailyRewardModal: React.FC<DailyRewardModalProps> = ({
                   {t.day} {tier.day}
                 </span>
 
-                {/* Gem thumbnail */}
-                <div className="my-1">
-                  <CosmicGemSvg gem={gem} size={32} />
-                </div>
+                <div className="my-1 text-2xl" aria-label="Gold">🪙</div>
 
                 {/* Reward text */}
                 <span className="text-[9px] font-extrabold text-yellow-300 leading-tight">
                   {lang === 'ru' ? tier.labelRu : tier.labelEn}
+                  <span className="mt-1 block">+{tier.gold} 🪙</span>
                 </span>
 
                 {/* Checked icon if claimed */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { TileType, MagicEffectType } from '../types/game';
+import { OriginalTileType, MagicEffectType, TileType } from '../types/game';
 
 interface ChampionMeta {
   name: string;
@@ -10,7 +10,7 @@ interface ChampionMeta {
   funnyName: string;
 }
 
-export const CHAMPION_METAS: Record<TileType, ChampionMeta> = {
+export const CHAMPION_METAS: Record<OriginalTileType, ChampionMeta> = {
   yasuo: { name: 'Ясуо', funnyName: 'Хасаги 0/10 🌪️', title: 'Непрощённый', magic: 'wind', accentColor: '#38bdf8', glowColor: 'rgba(56, 189, 248, 0.7)' },
   ahri: { name: 'Ари', funnyName: 'Лисичка-Хитрюга 🦊', title: 'Девятихвостая лиса', magic: 'arcane', accentColor: '#ec4899', glowColor: 'rgba(236, 72, 153, 0.7)' },
   jinx: { name: 'Джинкс', funnyName: 'Психо-Ракета 🚀', title: 'Хулиганка', magic: 'fire', accentColor: '#06b6d4', glowColor: 'rgba(6, 182, 212, 0.7)' },
